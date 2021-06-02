@@ -1,0 +1,1 @@
+/usr/bin/cc    CMakeFiles/igraph_test.dir/igraph_test.c.o  -o igraph_test  /usr/local/lib/libigraph.a -lm /usr/lib/x86_64-linux-gnu/libblas.so /usr/lib/x86_64-linux-gnu/liblapack.so /usr/lib/x86_64-linux-gnu/libblas.so /usr/lib/x86_64-linux-gnu/liblapack.so /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.so -lOpenMP::OpenMP_CXX 
