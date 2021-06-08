@@ -43,7 +43,13 @@ int main(const int argc, const char* argv[]) {
     T.click();
 
     // compute the diameter of the largest WCC of this network
-    cout << G.diameterBD() << endl;
+
+    vector<int> res_eccentricities = G.eccentricitiesBD();
+
+    for (auto i = res_eccentricities.begin(); i != res_eccentricities.end(); ++i)
+        cout << *i << ' ';
+
+    //cout << G.eccentricitiesBD() << endl;
     T.click();
     
     // list the network's distance distribution
