@@ -46,8 +46,13 @@ int main(const int argc, const char* argv[]) {
 
     vector<int> res_eccentricities = G.eccentricitiesBD();
 
+    // Create and open a text file
+    ofstream MyFile("eccentricities_teexgraph.txt");
+
     for (auto i = res_eccentricities.begin(); i != res_eccentricities.end(); ++i)
-        cout << *i << ' ';
+        MyFile << *i << ' ';
+
+    MyFile.close();
 
     //cout << G.eccentricitiesBD() << endl;
     T.click();
