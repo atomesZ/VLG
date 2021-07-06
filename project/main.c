@@ -30,7 +30,7 @@ int main(int argc, char** argv)
         exit( EXIT_FAILURE );
     }
 
-    printf("We loaded the graph successfully\n");
+    printf("Graph loading : OK\n");
 
 
     // Get diameter and average degree
@@ -39,16 +39,24 @@ int main(int argc, char** argv)
     igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
     printf("Diameter of the graph %s with average degree %g: %g\n",
             argv[1],
-            2.0 * igraph_ecount(&graph) / igraph_vcount(&graph), 
+            2.0 * igraph_ecount(&graph) / igraph_vcount(&graph),
             (double) diameter);
 
-
-
-
-
+    printf("Diameter : OK\n");
 
     // Get eccentricities
     igraph_vector_t res_eccentricities;
+
+    long int size_res_eccentricities = igraph_vcount(&graph);
+
+    graph_error_code = igraph_vector_init(&res_eccentricities, size_res_eccentricities);
+    if (graph_error_code)
+    {
+        fprintf(stderr, "Could not init vector for eccentricities\n");
+        exit( EXIT_FAILURE );
+    }
+
+
     igraph_vs_t all_vs = igraph_vss_all();
     //graph_error_code = igraph_vs_all(&all_vs);
 
@@ -58,16 +66,18 @@ int main(int argc, char** argv)
         exit( EXIT_FAILURE );
     }
 
+    printf("Vertices : OK\n");
 
+    //TODO
     graph_error_code = igraph_eccentricity(&graph, &res_eccentricities, all_vs, IGRAPH_ALL);
-    
+
     if (graph_error_code)
     {
         fprintf(stderr, "Could not get eccentricity\n");
         exit( EXIT_FAILURE );
     }
 
- 
+    printf("Eccentricities : OK\n");
 
     FILE* file_eccentricities = fopen("eccentricities_teexgraph.txt", "w");
 
@@ -92,7 +102,7 @@ int main(int argc, char** argv)
 
     fclose(fptr);
 
+    printf("Destroy : OK\n");
+
     return 0;
-
-
 }
