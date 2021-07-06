@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "eccentricities.h"
+
 int main(int argc, char** argv)
 {
-
     if (argc != 2)
     {
         fprintf(stderr, "We need the name of the file containing the graph\n");
@@ -44,32 +45,10 @@ int main(int argc, char** argv)
 
     printf("Diameter : OK\n");
 
-    // Get eccentricities
-    igraph_vector_t res_eccentricities;
-
-    long int size_res_eccentricities = igraph_vcount(&graph);
-
-    graph_error_code = igraph_vector_init(&res_eccentricities, size_res_eccentricities);
-    if (graph_error_code)
-    {
-        fprintf(stderr, "Could not init vector for eccentricities\n");
-        exit( EXIT_FAILURE );
-    }
-
-
-    igraph_vs_t all_vs = igraph_vss_all();
-    //graph_error_code = igraph_vs_all(&all_vs);
-
-    if (graph_error_code)
-    {
-        fprintf(stderr, "Could not get all vertices\n");
-        exit( EXIT_FAILURE );
-    }
-
-    printf("Vertices : OK\n");
 
     //TODO
-    graph_error_code = igraph_eccentricity(&graph, &res_eccentricities, all_vs, IGRAPH_ALL);
+    unsigned long int* res_eccentricities = get_eccentricities(&graph, 2, tactique_1_hasard);
+
 
     if (graph_error_code)
     {
@@ -81,26 +60,18 @@ int main(int argc, char** argv)
 
     FILE* file_eccentricities = fopen("eccentricities_teexgraph.txt", "w");
 
+    unsigned long int num_vertices = igraph_vcount(&graph); // actually is igraph_integer_t but we try to sneaky cast
 
-    igraph_real_t el;
-
-    // Iterate over vector of eccentricities and write to file
-    long len_vec_ecc = igraph_vector_size(&res_eccentricities);
-    for (long i = 0; i < len_vec_ecc; ++i)
-    {
-        el = igraph_vector_e(&res_eccentricities, i);
-
-        fprintf(file_eccentricities, "%ld ", (long) el);
-    }
+    for (unsigned long int i = 0; i < num_vertices; ++i)
+        fprintf(file_eccentricities, "%ld ", (long) res_eccentricities[i]);
 
 
-    igraph_vector_destroy(&res_eccentricities);
-    igraph_vs_destroy(&all_vs);
-
+    free(res_eccentricities);
 
     igraph_destroy(&graph);
 
     fclose(fptr);
+    fclose(file_eccentricities);
 
     printf("Destroy : OK\n");
 
