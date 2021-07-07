@@ -21,6 +21,11 @@ int main(int argc, char** argv)
         exit( EXIT_FAILURE );
     }
 
+    //On initialise le random
+    srand(time(NULL));   // Initialization, should only be called once.
+    igraph_rng_seed(igraph_rng_default(), 42);
+
+
 
     igraph_t graph;
 
@@ -69,7 +74,7 @@ int main(int argc, char** argv)
 
 
 
-////////////////////////////////////////:
+    ////////////////////////////////////////
     printf("We outputed the eccentricities in the file '%s'\n", res_filename);
     fclose(file_eccentricities);
 

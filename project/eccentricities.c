@@ -6,7 +6,7 @@ void custom_eccentricities(igraph_t* graph,
 {
     unsigned long int num_bfs = 0;
     int delta = 0;
-    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, tactique_1_hasard);
+    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, tactique_5_community);
 
     printf("OK\n");
     printf("Value of delta: %d\n", delta);
@@ -18,16 +18,51 @@ void custom_eccentricities(igraph_t* graph,
     free(res_eccentricities);
 }
 
-long int tactique_1_hasard(W_list* W_head, unsigned long int size)
+long int tactique_5_community(igraph_t* graph, W_list* W_head, unsigned long int size)
 {
-    srand(time(NULL));   // Initialization, should only be called once.
-    int i = rand() % size;
-    return W_head->val;
+    igraph_vector_t modularity, membership;
+    igraph_matrix_t memberships;
+    igraph_vector_init(&modularity, 0);
+    igraph_vector_init(&membership, 0);
+    igraph_matrix_init(&memberships, 0, 0);
+
+    igraph_community_multilevel(graph, NULL, 1, &membership, &memberships, &modularity);
+
+    printf("Modularities:\n");
+    igraph_vector_print(&modularity);
+
+    //Prend la meilleure Modularite
+    long int j = igraph_vector_which_max(&modularity);
+    unsigned long int membership_size = igraph_vector_size(&membership);
+
+    //igraph_vector_destroy(&modularity);
+    //igraph_vector_destroy(&membership);
+    //igraph_matrix_destroy(&memberships);
+    long int tactique = rand() % membership_size;
+
+    return (long int)MATRIX(memberships, j, tactique);
 }
 
-long int select_from(long int (*tactique)(W_list*, unsigned long int), W_list* W_head, unsigned long int size)
+long int tactique_1_hasard(igraph_t* graph, W_list* W_head, unsigned long int size)
 {
-    return tactique(W_head, size);
+    W_list* current_node = W_head; // Useless but cleaner
+    int i = rand() % size;
+    for (int j = 0; j < i; ++j)
+    {
+        current_node = current_node->next;
+        if (current_node == NULL)
+        {
+            fprintf(stderr, "If this code is reached, then we miscalculated the size of the list somehow\n");
+            exit( EXIT_FAILURE );
+        }
+    }
+
+    return current_node->val;
+}
+
+long int select_from(long int (*tactique)(igraph_t*, W_list*, unsigned long int), igraph_t* graph, W_list* W_head, unsigned long int size)
+{
+    return tactique(graph, W_head, size);
 }
 
 long int get_vertice_eccentricity(igraph_t* graph, long int v, igraph_vector_t* distance)
@@ -78,7 +113,7 @@ igraph_t* get_largest_connected_component(igraph_t* graph)
     return largest_component;
 }
 
-unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, long int (*tactique)(W_list*, unsigned long int))
+unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, long int (*tactique)(igraph_t*, W_list*, unsigned long int))
 {
     //trouver la plus grande Composante connexe
     //graph = get_largest_connected_component(graph);
@@ -86,6 +121,7 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
 
     unsigned long int num_vertices = igraph_vcount(graph); // actually is igraph_integer_t but we try to sneaky cast
 
+    unsigned int len_W_list = num_vertices;
     //INIT
     W_list* W_head = linked_list_init(graph, num_vertices);
     unsigned long int* eccentricities = calloc(num_vertices, sizeof(unsigned long int));
@@ -109,7 +145,7 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
     {
         // Nous selectionnons le point initial par lequel on va commencer nos
         // calculs d'excentricite
-        long int v = select_from(tactique, W_head, num_vertices);
+        const long int v = select_from(tactique, graph, W_head, len_W_list);
 
         // on va calculer les distance de v par rapport aux w en meme temps que
         // le calcul d'excentricites (grâce aux BFS)
@@ -139,6 +175,8 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
 
                 // Pop the value
                 linked_list_pop(prev_node, &current_node, &W_head);
+
+                len_W_list -= 1;
             }
             else
             {
