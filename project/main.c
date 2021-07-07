@@ -46,8 +46,12 @@ int main(int argc, char** argv)
     printf("Diameter : OK\n");
 
 
-    //TODO
-    unsigned long int* res_eccentricities = get_eccentricities(&graph, 2, tactique_1_hasard);
+    unsigned long int num_bfs = 0;
+    unsigned long int num_vertices = igraph_vcount(&graph);
+
+    printf("Number of vertices : %ld\n", num_vertices);
+
+    unsigned long int* res_eccentricities = get_eccentricities(&graph, 0, &num_bfs, tactique_1_hasard);
 
 
     if (graph_error_code)
@@ -57,13 +61,17 @@ int main(int argc, char** argv)
     }
 
     printf("Eccentricities : OK\n");
+    printf("Number of BFS used : %ld\n", num_bfs);
 
-    FILE* file_eccentricities = fopen("eccentricities_teexgraph.txt", "w");
 
-    unsigned long int num_vertices = igraph_vcount(&graph); // actually is igraph_integer_t but we try to sneaky cast
+    char* res_filename =  "eccentricities_teexgraph.txt";
+    FILE* file_eccentricities = fopen(res_filename, "w");
 
     for (unsigned long int i = 0; i < num_vertices; ++i)
         fprintf(file_eccentricities, "%ld ", (long) res_eccentricities[i]);
+
+    printf("We outputed the ecentricities in the file '%s'\n", res_filename);
+
 
 
     free(res_eccentricities);
@@ -74,6 +82,7 @@ int main(int argc, char** argv)
     fclose(file_eccentricities);
 
     printf("Destroy : OK\n");
+
 
     return 0;
 }
