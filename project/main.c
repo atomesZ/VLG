@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "eccentricities.h"
+#include "igraph_eccentricities.h"
 
 int main(int argc, char** argv)
 {
@@ -24,6 +25,8 @@ int main(int argc, char** argv)
     igraph_t graph;
 
     int graph_error_code = igraph_read_graph_edgelist(&graph, fptr, 0, 0);
+    fclose(fptr);
+
 
     if (graph_error_code == IGRAPH_PARSEERROR)
     {
@@ -31,58 +34,47 @@ int main(int argc, char** argv)
         exit( EXIT_FAILURE );
     }
 
-    printf("Graph loading : OK\n");
+    printf("Graph loading of '%s': OK\n", argv[1]);
 
 
     // Get diameter and average degree
     igraph_real_t diameter;
-
-    igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
-    printf("Diameter of the graph %s with average degree %g: %g\n",
-            argv[1],
-            2.0 * igraph_ecount(&graph) / igraph_vcount(&graph),
-            (double) diameter);
-
-    printf("Diameter : OK\n");
-
-
-    unsigned long int num_bfs = 0;
+    unsigned long int num_edges = igraph_ecount(&graph);
     unsigned long int num_vertices = igraph_vcount(&graph);
 
-    printf("Number of vertices : %ld\n", num_vertices);
+    printf("Number of edges: %ld\n", num_edges);
+    printf("Number of vertices: %ld\n", num_vertices);
 
-    unsigned long int* res_eccentricities = get_eccentricities(&graph, 0, &num_bfs, tactique_1_hasard);
 
 
-    if (graph_error_code)
-    {
-        fprintf(stderr, "Could not get eccentricity\n");
-        exit( EXIT_FAILURE );
-    }
+    igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
 
-    printf("Eccentricities : OK\n");
-    printf("Number of BFS used : %ld\n", num_bfs);
 
+    printf("Diameter: %ld\n", (long int) diameter);
+    printf("Average degree: %g\n", 2.0 * num_edges / num_vertices);
+
+    printf("Eccentricities: ");
 
     char* res_filename =  "eccentricities_teexgraph.txt";
     FILE* file_eccentricities = fopen(res_filename, "w");
 
-    for (unsigned long int i = 0; i < num_vertices; ++i)
-        fprintf(file_eccentricities, "%ld ", (long) res_eccentricities[i]);
 
-    printf("We outputed the ecentricities in the file '%s'\n", res_filename);
+    /////////////////////////////////////////////////////
+    int bool_custom_eccentricities = 1;
+
+    if (bool_custom_eccentricities)
+        custom_eccentricities(&graph, num_vertices, file_eccentricities);
+    else // igraph_eccentricities
+        igraph_eccentricities(&graph, num_vertices, file_eccentricities);
 
 
 
-    free(res_eccentricities);
-
-    igraph_destroy(&graph);
-
-    fclose(fptr);
+////////////////////////////////////////:
+    printf("We outputed the eccentricities in the file '%s'\n", res_filename);
     fclose(file_eccentricities);
 
-    printf("Destroy : OK\n");
-
+    igraph_destroy(&graph);
+    printf("Destroy: OK\n");
 
     return 0;
 }

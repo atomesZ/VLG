@@ -9,7 +9,9 @@
 
 #define MY_INF 9223372036854775807
 
-
+void custom_eccentricities(igraph_t* graph,
+                            unsigned long int num_vertices,
+                            FILE* file_eccentricities);
 
 long int tactique_1_hasard(W_list* W_head, unsigned long int size);
 

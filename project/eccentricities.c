@@ -1,5 +1,23 @@
 #include "eccentricities.h"
 
+void custom_eccentricities(igraph_t* graph,
+                            unsigned long int num_vertices,
+                            FILE* file_eccentricities)
+{
+    unsigned long int num_bfs = 0;
+    int delta = 0;
+    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, tactique_1_hasard);
+
+    printf("OK\n");
+    printf("Value of delta: %d\n", delta);
+    printf("Number of BFS used: %ld\n", num_bfs);
+
+    for (unsigned long int i = 0; i < num_vertices; ++i)
+        fprintf(file_eccentricities, "%ld ", (long) res_eccentricities[i]);
+
+    free(res_eccentricities);
+}
+
 long int tactique_1_hasard(W_list* W_head, unsigned long int size)
 {
     srand(time(NULL));   // Initialization, should only be called once.
