@@ -16,6 +16,7 @@ void igraph_eccentricities(igraph_t* graph,
 
     igraph_vs_t all_vs = igraph_vss_all();
 
+
     graph_error_code = igraph_eccentricity(graph, &res_eccentricities, all_vs, IGRAPH_ALL);
 
     if (graph_error_code)
@@ -24,15 +25,12 @@ void igraph_eccentricities(igraph_t* graph,
         exit( EXIT_FAILURE );
     }
 
-    printf("OK\n");
-
+    printf("Eccentricities: OK\n");
 
     igraph_real_t el;
 
     // Iterate over vector of eccentricities and write to file
     long int len_vec_ecc = igraph_vector_size(&res_eccentricities);
-
-    printf("AAAAHH num vertices: %ld, len_vec_ecc: %ld\n", num_vertices, len_vec_ecc);
 
     for (long int i = 0; i < len_vec_ecc; ++i)
     {

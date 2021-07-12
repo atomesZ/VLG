@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "linked_list.h"
 
-W_list* linked_list_init(igraph_t* graph, unsigned long int num_vertices)
+W_list* linked_list_init(unsigned long int num_vertices)
 {
     W_list* head = NULL;
     for (long int i = num_vertices - 1; i >= 0; --i)

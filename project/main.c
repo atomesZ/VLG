@@ -58,8 +58,6 @@ int main(int argc, char** argv)
     printf("Diameter: %ld\n", (long int) diameter);
     printf("Average degree: %g\n", 2.0 * num_edges / num_vertices);
 
-    printf("Eccentricities: ");
-
     char* res_filename =  "eccentricities_teexgraph.txt";
     FILE* file_eccentricities = fopen(res_filename, "w");
 
