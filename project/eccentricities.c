@@ -187,7 +187,7 @@ igraph_t* get_largest_connected_component(igraph_t* graph)
 {
     igraph_vector_ptr_t components;
     igraph_vector_ptr_init(&components, 0);
-    igraph_decompose(graph, &components, IGRAPH_STRONG, -1, 2);
+    igraph_decompose(graph, &components, IGRAPH_WEAK, -1, 2);
 
     // a voir si il existe pas un max pour igraph_vector_ptr_t
     igraph_vector_ptr_sort(&components, igraph_vector_colex_cmp);
@@ -407,6 +407,10 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
         //MODULARITY
         graph_stats->modularity = VECTOR(modularity)[igraph_vector_size(&modularity) - 1];
         printf("\nMODULARITY : %lf\n", graph_stats->modularity);
+        //igraph_real_t *modularityy = malloc(sizeof(igraph_real_t *));
+        //igraph_modularity(graph, &membership, NULL, 1, 0, modularityy);
+        //printf("\nMODULARITY : %lf\n", *modularityy);
+
 
         //COMMUNITIES INTO GRAPH STATS
         init_communities(graph_stats, &membership);
@@ -607,6 +611,19 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
         eccentricities[v] = get_vertice_eccentricity(graph, v, &distance);
         *num_bfs += 1;
 
+        if (*num_bfs % 1 == 0)
+        {
+            commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
+            unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
+            unsigned long int num_not_treated_vertices = 0;
+            for (unsigned long int i = 0; i < len_commus_not_treated; ++i)
+            {
+                num_not_treated_vertices += commus_not_treated[i]->len_vertices_not_treated;
+            }
+            printf("\rProgress bar eccentricities calculated: %Lf%%   \e[?25l", (1 - (long double)num_not_treated_vertices / graph_stats->num_vertices));
+            fflush(stdout);
+        }
+
         for (unsigned long int i_commu = 0; i_commu < graph_stats->len_commus_not_treated; ++i_commu)
         {
             if (graph_stats->commus_not_treated[i_commu]->len_vertices_not_treated != 0) // removable TODO FIXME
@@ -657,6 +674,8 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
     free_graph_stats(graph_stats);
     free(eccentricities_L);
     free(eccentricities_U);
+
+    printf("\e[?25h\n");
 
     return eccentricities;
 }

@@ -57,10 +57,10 @@ int main(int argc, char** argv)
 
 
 
-    igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
+    //igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
 
 
-    printf("Diameter: %ld\n", (long int) diameter);
+    //printf("Diameter: %ld\n", (long int) diameter);
     printf("Average degree: %g\n", 2.0 * num_edges / num_vertices);
 
     char* res_filename =  "eccentricities_teexgraph.txt";

@@ -12,6 +12,8 @@ enum tactique {
     BIG_DELTA,
 
     COMMUNITY, // This is a marker
+
+    //Community sorted by size and filled
     COMMUNITY_SIZE, // This is a marker
     COMMUNITY_SIZE_ASC_RANDOM,
     COMMUNITY_SIZE_ASC_HIGH_DEGREE,
