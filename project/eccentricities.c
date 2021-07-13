@@ -58,61 +58,61 @@ long int tactique_4_big_delta(commu_stats_t* community)
 
 int communities_size_sort_asc_comp(const void* C, const void* D)
 {
-    const commu_stats_t* A = C;
-    const commu_stats_t* B = D;
+    commu_stats_t** A = (commu_stats_t**)C;
+    commu_stats_t** B = (commu_stats_t**)D;
 
-    long double A_pourcentage_traite_excentricites = (long double)(A->num_known_eccentricities) / (long double)A->len_list_vertice;
-    long double B_pourcentage_traite_excentricites = (long double)(B->num_known_eccentricities) / (long double)B->len_list_vertice;
+    long double A_pourcentage_traite_excentricites = (long double)((*A)->num_known_eccentricities) / (long double)(*A)->len_list_vertice;
+    long double B_pourcentage_traite_excentricites = (long double)((*B)->num_known_eccentricities) / (long double)(*B)->len_list_vertice;
 
-    long double a_score = (1 - A_pourcentage_traite_excentricites) / (long double)A->len_list_vertice;
-    long double b_score = (1 - B_pourcentage_traite_excentricites) / (long double)B->len_list_vertice;
+    long double a_score = (1 - A_pourcentage_traite_excentricites) / (long double)(*A)->len_list_vertice;
+    long double b_score = (1 - B_pourcentage_traite_excentricites) / (long double)(*B)->len_list_vertice;
 
     return (a_score < b_score) - (a_score > b_score);
 }
 
 int communities_size_sort_dsc_comp(const void* C, const void* D)
 {
-    const commu_stats_t* A = C;
-    const commu_stats_t* B = D;
+    commu_stats_t** A = (commu_stats_t**)C;
+    commu_stats_t** B = (commu_stats_t**)D;
 
-    long double A_pourcentage_traite_excentricites = (long double)(A->num_known_eccentricities) / (long double)A->len_list_vertice;
-    long double B_pourcentage_traite_excentricites = (long double)(B->num_known_eccentricities) / (long double)B->len_list_vertice;
+    long double A_pourcentage_traite_excentricites = (long double)((*A)->num_known_eccentricities) / (long double)(*A)->len_list_vertice;
+    long double B_pourcentage_traite_excentricites = (long double)((*B)->num_known_eccentricities) / (long double)(*B)->len_list_vertice;
 
 
-    long double a_score = (long double)A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
-    long double b_score = (long double)B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
+    long double a_score = (long double)(*A)->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
+    long double b_score = (long double)(*B)->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
 
     return (a_score < b_score) - (a_score > b_score);
 }
 
 void tactique_communities_size(graph_stats_t* graph_stats)
 {
-    const unsigned long int len_list_commus = graph_stats->len_list_commus;
-    commu_stats_t* list_commus = graph_stats->list_commus;
+    const unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
+    commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
 
     if (graph_stats->tactique < COMMUNITY_SIZE_DSC)
-        qsort(list_commus, len_list_commus, sizeof(commu_stats_t), communities_size_sort_asc_comp);
+        qsort(commus_not_treated, len_commus_not_treated, sizeof(commu_stats_t*), communities_size_sort_asc_comp);
     else if (graph_stats->tactique > COMMUNITY_SIZE_DSC)
-        qsort(list_commus, len_list_commus, sizeof(commu_stats_t), communities_size_sort_dsc_comp);
+        qsort(commus_not_treated, len_commus_not_treated, sizeof(commu_stats_t*), communities_size_sort_dsc_comp);
 
-    graph_stats->list_commus = list_commus;
+    graph_stats->commus_not_treated = commus_not_treated;
 }
 
 void tactique_communities_random(graph_stats_t* graph_stats)
 {
-    const unsigned long int len_list_commus = graph_stats->len_commus_not_treated;
-    commu_stats_t** list_commus = graph_stats->commus_not_treated;
+    const unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
+    commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
 
     //shuffle
     size_t i;
-    for (i = 0; i < len_list_commus - 1; i++)
+    for (i = 0; i < len_commus_not_treated - 1; i++)
     {
-        size_t j = i + rand() / (RAND_MAX / (len_list_commus - i) + 1);
-        commu_stats_t* t = list_commus[j];
-        list_commus[j] = list_commus[i];
-        list_commus[i] = t;
+        size_t j = i + rand() / (RAND_MAX / (len_commus_not_treated - i) + 1);
+        commu_stats_t* t = commus_not_treated[j];
+        commus_not_treated[j] = commus_not_treated[i];
+        commus_not_treated[i] = t;
     }
-    graph_stats->commus_not_treated = list_commus;
+    graph_stats->commus_not_treated = commus_not_treated;
 }
 
 void sort_communities(graph_stats_t* graph_stats)
@@ -152,15 +152,8 @@ commu_stats_t* get_a_community(graph_stats_t* graph_stats)
     if (graph_stats->tactique > COMMUNITY_RANDOM)
         return *(graph_stats->commus_not_treated); // graph_stats->list_commus + i
 
-    /*long int min_commu = 0;
-    for  (unsigned long int i = 1; i < graph_stats->len_list_commus; i++)
-    {
-        if (graph_stats->list_commus[i - 1].len_vertices_not_treated < graph_stats->list_commus[i].len_vertices_not_treated)
-            min_commu = i;
-    }
-    return &(graph_stats->list_commus[min_commu]);*/
     sort_communities(graph_stats);
-    return graph_stats->list_commus; // We return the address of the first element
+    return *(graph_stats->commus_not_treated); // We return the address of the first element
 }
 
 
@@ -253,7 +246,6 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
     commu_stats_t* list_commus = graph_stats->list_commus;
     const unsigned long int len_membership = igraph_vector_size(membership);
 
-    printf("len_membership : %ld\n", len_membership);
     for (unsigned long int i = 0; i < len_membership; i++)
     {
         unsigned long int j = 0;
@@ -371,7 +363,7 @@ void set_commus_stats(graph_stats_t* graph_stats)
             }
 
             // mean degree without overflow nor underflow
-            mean_degree += (current_degree - mean_degree) / (j + 1);
+            mean_degree += (current_degree - mean_degree) / (j + 1); //FIXME for example : 0.98 shouldnt be possible
         }
         //STATS
         current_commu->mean_degree = mean_degree;
@@ -432,6 +424,7 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
     else
     {
         fill_without_communities(graph_stats, &degrees);
+        fill_commus_not_treated(graph_stats);
     }
 
     igraph_vector_destroy(&degrees);
@@ -624,19 +617,24 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
                     ++i_vertices_not_treated)
                 {
                     unsigned long int w = vertices_not_treated[i_vertices_not_treated]->value;
-                    //LES BORNES
+                    // LES BORNES
                     long int d = VECTOR(distance)[w];
+
+                    vertices_not_treated[i_vertices_not_treated]->borne_inf = fmax(vertices_not_treated[i_vertices_not_treated]->borne_inf, fmax(eccentricities[v] - d, d));
+                    vertices_not_treated[i_vertices_not_treated]->borne_sup = fmin(vertices_not_treated[i_vertices_not_treated]->borne_sup, eccentricities[v] + d);//inf
+
                     eccentricities_L[w] = fmax(eccentricities_L[w], fmax(eccentricities[v] - d, d));
-                    eccentricities_U[w] = fmin(eccentricities_U[w], eccentricities[v] + d);//inf
+                    eccentricities_U[w] = fmin(eccentricities_U[w], eccentricities[v] + d); // inf
 
                     // Si l'écart entre les deux bornes est inférieur à delta,
                     // alors nous avons trouve la bonne excentricite
+                    //if (vertices_not_treated[i_vertices_not_treated]->borne_sup - vertices_not_treated[i_vertices_not_treated]->borne_inf <= delta)
                     if (eccentricities_U[w] - eccentricities_L[w] <= delta)
                     {
+                        eccentricities[w] = vertices_not_treated[i_vertices_not_treated]->borne_inf;
                         eccentricities[w] = eccentricities_L[w];
 
-                        // Pop the value
-                        //linked_list_pop(prev_node, &current_node, &W_head);
+                        // Pop the value;
                         // We pop in vertices_not_treated
                         graph_stats->commus_not_treated[i_commu]->num_known_eccentricities += 1;
                         vertices_not_treated[i_vertices_not_treated] = vertices_not_treated[--(graph_stats->commus_not_treated[i_commu]->len_vertices_not_treated)];
@@ -655,55 +653,6 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
         }
         igraph_vector_destroy(&distance); // FIXME, maybe use the same everytimes
     }
-
-
-    // // Nous calculons les excentricites de tout le graphe
-    // while (W_head != NULL)
-    // {
-    //     // Nous selectionnons le point initial par lequel on va commencer nos
-    //     // calculs d'excentricite
-    //     const long int v = select_from(graph_stats, W_head, len_W_list);
-    //
-    //     // on va calculer les distance de v par rapport aux w en meme temps que
-    //     // le calcul d'excentricites (grâce aux BFS)
-    //     igraph_vector_t distance; // = calloc(num_vertices, sizeof(long int));
-    //     igraph_vector_init(&distance, graph_stats->num_vertices);
-    //
-    //     //calcul d'excentricites
-    //     eccentricities[v] = get_vertice_eccentricity(graph, v, &distance);
-    //     *num_bfs += 1;
-    //
-    //     W_list* prev_node = NULL;
-    //     W_list* current_node = W_head;
-    //     while (current_node != NULL)
-    //     {
-    //         long int w = current_node->val;
-    //
-    //         //LES BORNES
-    //         long int d = VECTOR(distance)[w];
-    //         eccentricities_L[w] = fmax(eccentricities_L[w], fmax(eccentricities[v] - d, d));
-    //         eccentricities_U[w] = fmin(eccentricities_U[w], eccentricities[v] + d);//inf
-    //
-    //         // Si l'écart entre les deux bornes est inférieur à delta,
-    //         // alors nous avons trouve la bonne excentricite
-    //         if (eccentricities_U[w] - eccentricities_L[w] <= delta)
-    //         {
-    //             eccentricities[w] = eccentricities_L[w];
-    //
-    //             // Pop the value
-    //             linked_list_pop(prev_node, &current_node, &W_head);
-    //
-    //
-    //             len_W_list -= 1;
-    //         }
-    //         else
-    //         {
-    //             prev_node = current_node;
-    //             current_node = current_node->next;
-    //         }
-    //     }
-    //     igraph_vector_destroy(&distance);
-    // }
 
     free_graph_stats(graph_stats);
     free(eccentricities_L);
