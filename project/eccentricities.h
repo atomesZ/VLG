@@ -9,16 +9,21 @@
 
 #define MY_INF 9223372036854775807
 
-
-long int tactique_1_random_old(W_list* W_head, unsigned long int len_W_list);
-
+//TACTIQUES
 long int tactique_1_random(commu_stats_t* community);
 
+long int tactique_2_high_degree(commu_stats_t* community);
+
+long int tactique_3_low_degree(commu_stats_t* community);
+
+long int tactique_4_big_delta(commu_stats_t* community);
+
+//Tactiques communautes
 int communities_size_sort_asc_comp(const void* A, const void* B);
-
 int communities_size_sort_dsc_comp(const void* A, const void* B);
-
 void tactique_communities_size(graph_stats_t* graph_stats);
+
+void tactique_communities_random(graph_stats_t* graph_stats);
 
 void sort_communities(graph_stats_t* graph_stats);
 
@@ -33,6 +38,8 @@ void init_communities(graph_stats_t* graph_stats, igraph_vector_t* membership);
 void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, igraph_vector_t* degrees);
 
 void fill_without_communities(graph_stats_t* graph_stats, igraph_vector_t* degrees);
+
+void fill_commus_not_treated(graph_stats_t* graph_stats);
 
 void set_commus_stats(graph_stats_t* graph_stats);
 

@@ -8,18 +8,28 @@
 enum tactique {
     RANDOM = 0,
     HIGH_DEGREE,
+    LOW_DEGREE,
+    BIG_DELTA,
 
     COMMUNITY, // This is a marker
     COMMUNITY_SIZE, // This is a marker
     COMMUNITY_SIZE_ASC_RANDOM,
-    COMMUNITY_SIZE_DSC_RANDOM,
     COMMUNITY_SIZE_ASC_HIGH_DEGREE,
-    COMMUNITY_SIZE_DSC_HIGH_DEGREE,
+    COMMUNITY_SIZE_ASC_LOW_DEGREE,
+    COMMUNITY_SIZE_ASC_BIG_DELTA,
 
+    COMMUNITY_SIZE_DSC, // This is a marker
+    COMMUNITY_SIZE_DSC_RANDOM,
+    COMMUNITY_SIZE_DSC_HIGH_DEGREE,
+    COMMUNITY_SIZE_DSC_LOW_DEGREE,
+    COMMUNITY_SIZE_DSC_BIG_DELTA,
+
+    //RANDOM community
     COMMUNITY_RANDOM, // This is a marker
     COMMUNITY_RANDOM_RANDOM,
     COMMUNITY_RANDOM_HIGH_DEGREE,
-    COMMUNITY_RANDOM_
+    COMMUNITY_RANDOM_LOW_DEGREE,
+    COMMUNITY_RANDOM_BIG_DELTA
 };
 
 typedef struct vertice_stats {
@@ -27,7 +37,6 @@ typedef struct vertice_stats {
     unsigned int degree;
     long int borne_inf; // TODO
     long int borne_sup; // TODO
-
 } vertice_stats_t;
 
 typedef struct commu_stats {
@@ -38,7 +47,7 @@ typedef struct commu_stats {
     unsigned long int fill_list_vertice;
 
     // FIXME Maybe use this for commu as well (commu_not_treated) to be faster
-    long int* vertices_not_treated; // FIXME Maybe change this for an array of pointer to vertice_stats
+    vertice_stats_t** vertices_not_treated; // FIXME Maybe change this for an array of pointer to vertice_stats
     unsigned long int len_vertices_not_treated;
 
     //STATS
@@ -60,6 +69,9 @@ typedef struct graph_stats {
     commu_stats_t* list_commus; // if not using commus, then this list will have 1 value : the graph
     unsigned long int len_list_commus;
     unsigned long int num_vertices;
+
+    commu_stats_t** commus_not_treated;
+    unsigned long int len_commus_not_treated;
 
     enum tactique tactique;
 

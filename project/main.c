@@ -1,6 +1,7 @@
 #include <igraph.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "eccentricities.h"
 #include "igraph_eccentricities.h"
@@ -65,18 +66,11 @@ int main(int argc, char** argv)
     char* res_filename =  "eccentricities_teexgraph.txt";
     FILE* file_eccentricities = fopen(res_filename, "w");
 
-
-    /////////////////////////////////////////////////////
-    int bool_custom_eccentricities = 1;
-
-    if (bool_custom_eccentricities)
+    if (strcmp(default_tactic, "IGRAPH"))
         custom_eccentricities(&graph, num_vertices, file_eccentricities, default_tactic);
     else // igraph_eccentricities
         igraph_eccentricities(&graph, num_vertices, file_eccentricities);
 
-
-
-    ////////////////////////////////////////
     printf("We outputed the eccentricities in the file '%s'\n", res_filename);
     fclose(file_eccentricities);
 
