@@ -19,10 +19,18 @@ long int tactique_1_random_old(W_list* W_head, unsigned long int len_W_list)
 
 long int tactique_1_random(commu_stats_t* community)
 {
-    const unsigned long int len_list_vertice = community->len_list_vertice;
-    int i = rand() % len_list_vertice;
+    const unsigned long int len_vertices_not_treated = community->len_vertices_not_treated;
 
-    return community->list_vertice[i].value;
+    int i = rand() % len_vertices_not_treated;
+
+    long int res = community->vertices_not_treated[i];
+
+    community->vertices_not_treated[i] = community->vertices_not_treated[len_vertices_not_treated - 1];
+    community->len_vertices_not_treated -= 1;
+    community->num_known_eccentricities += 1;
+
+    //printf("ID community : %ld  Remplissage : %f\n", community->id_community, (double)community->num_known_eccentricities / (double)community->len_list_vertice);
+    return res;
 }
 
 int communities_size_sort_asc_comp(const void* C, const void* D)
@@ -32,9 +40,11 @@ int communities_size_sort_asc_comp(const void* C, const void* D)
 
     long double A_pourcentage_traite_excentricites = (long double)(A->num_known_eccentricities) / (long double)A->len_list_vertice;
     long double B_pourcentage_traite_excentricites = (long double)(B->num_known_eccentricities) / (long double)B->len_list_vertice;
-    double a_size = A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
-    double b_size = B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
-    return (a_size > b_size) - (a_size < b_size);
+
+    long double a_score = (long double)A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
+    long double b_score = (long double)B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
+
+    return (a_score > b_score) - (a_score < b_score);
 }
 
 int communities_size_sort_dsc_comp(const void* C, const void* D)
@@ -44,9 +54,12 @@ int communities_size_sort_dsc_comp(const void* C, const void* D)
 
     long double A_pourcentage_traite_excentricites = (long double)(A->num_known_eccentricities) / (long double)A->len_list_vertice;
     long double B_pourcentage_traite_excentricites = (long double)(B->num_known_eccentricities) / (long double)B->len_list_vertice;
-    double a_size = A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
-    double b_size = B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
-    return (a_size < b_size) - (a_size > b_size);
+
+
+    long double a_score = (long double)A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
+    long double b_score = (long double)B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
+
+    return (a_score < b_score) - (a_score > b_score);
 }
 
 void tactique_communities_size(graph_stats_t* graph_stats)
@@ -59,7 +72,7 @@ void tactique_communities_size(graph_stats_t* graph_stats)
     else if (graph_stats->tactique == COMMUNITY_SIZE_DSC_RANDOM || graph_stats->tactique == COMMUNITY_SIZE_DSC_HIGH_DEGREE)
         qsort(list_commus, len_list_commus, sizeof(commu_stats_t), communities_size_sort_dsc_comp);
 
-     graph_stats->list_commus = list_commus;
+    graph_stats->list_commus = list_commus;
 }
 
 void sort_communities(graph_stats_t* graph_stats)
@@ -85,15 +98,23 @@ commu_stats_t* get_a_community(graph_stats_t* graph_stats)
     if (graph_stats->tactique < COMMUNITY)
         return graph_stats->list_commus;
 
+
+
     if (graph_stats->tactique > COMMUNITY_RANDOM)
     {
         int i = rand() % graph_stats->len_list_commus;
         return &(graph_stats->list_commus[i]); // graph_stats->list_commus + i
     }
 
+    /*long int min_commu = 0;
+    for  (unsigned long int i = 1; i < graph_stats->len_list_commus; i++)
+    {
+        if (graph_stats->list_commus[i - 1].len_vertices_not_treated < graph_stats->list_commus[i].len_vertices_not_treated)
+            min_commu = i;
+    }
+    return &(graph_stats->list_commus[min_commu]);*/
     sort_communities(graph_stats);
-
-    return graph_stats->list_commus;
+    return graph_stats->list_commus; // We return the address of the first element
 }
 
 
@@ -158,7 +179,7 @@ void init_size_communities(graph_stats_t* graph_stats, igraph_vector_t* membersh
         unsigned long int j = 0;
         while (list_commus[j].id_community != -1
                               && list_commus[j].id_community != VECTOR(*membership)[i])
-            j++;
+            ++j;
 
         if (list_commus[j].id_community == -1)
         {
@@ -169,6 +190,8 @@ void init_size_communities(graph_stats_t* graph_stats, igraph_vector_t* membersh
         }
         else
             list_commus[j].len_list_vertice += 1;
+
+        list_commus[j].len_vertices_not_treated = list_commus[j].len_list_vertice;
     }
 
     //ALLOCATION
@@ -185,6 +208,8 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
 {
     commu_stats_t* list_commus = graph_stats->list_commus;
     const unsigned long int len_membership = igraph_vector_size(membership);
+
+    printf("len_membership : %ld\n", len_membership);
     for (unsigned long int i = 0; i < len_membership; i++)
     {
         unsigned long int j = 0;
@@ -196,11 +221,13 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
             //PAS CENSE ETRE LA
             printf("%s\n", "aaaaa");
         }
-
         if (list_commus[j].list_vertice == NULL)
         {
             list_commus[j].list_vertice = calloc(list_commus[j].len_list_vertice, sizeof(vertice_stats_t));
+            list_commus[j].vertices_not_treated = calloc(list_commus[j].len_list_vertice, sizeof(long int));
+
             list_commus[j].list_vertice[0].value = i;
+            list_commus[j].vertices_not_treated[0] = i;
 
             list_commus[j].list_vertice[0].degree = VECTOR(*degrees)[i];
 
@@ -212,12 +239,13 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
         else if (list_commus[j].fill_list_vertice < list_commus[j].len_list_vertice)
         {
             list_commus[j].list_vertice[list_commus[j].fill_list_vertice].value = i;
+            list_commus[j].vertices_not_treated[list_commus[j].fill_list_vertice] = i;
             list_commus[j].fill_list_vertice += 1;
         }
         else
         {
             //PAS CENSE ETRE LA
-            printf("%s\n", "aaaaa");
+            printf("%s\n", "aaaaa PAS CENSE ETRE LA");
         }
     }
 
@@ -335,6 +363,7 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
         //FREE
         igraph_vector_destroy(&modularity);
         igraph_vector_destroy(&membership);
+
 
         //SORT
         sort_communities(graph_stats);
@@ -490,6 +519,8 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
                 // Pop the value
                 linked_list_pop(prev_node, &current_node, &W_head);
 
+
+
                 len_W_list -= 1;
             }
             else
@@ -516,7 +547,7 @@ void custom_eccentricities(igraph_t* graph,
     int delta = 0;
 
 
-    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, COMMUNITY_SIZE_ASC_RANDOM);
+    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, COMMUNITY_SIZE_DSC_RANDOM);
     printf("Eccentricities: OK\n");
     printf("Value of delta: %d\n", delta);
     printf("Number of BFS used: %ld\n", num_bfs);

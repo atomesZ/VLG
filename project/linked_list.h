@@ -41,6 +41,8 @@ typedef struct commu_stats {
     //for construction only
     unsigned long int fill_list_vertice;
 
+    long int* vertices_not_treated;
+    unsigned long int len_vertices_not_treated;
 
     //STATS
     double mean_degree;
@@ -51,7 +53,7 @@ typedef struct commu_stats {
     long int mean_borne_inf;
     long int mean_borne_sup;
 
-    unsigned long int num_known_eccentricities;
+    unsigned long int num_known_eccentricities; //FIXME je suis en trop avec len_vertices_not_treated
 
 } commu_stats_t;
 
