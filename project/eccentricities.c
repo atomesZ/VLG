@@ -44,10 +44,10 @@ int communities_size_sort_asc_comp(const void* C, const void* D)
 
 
 
-    long double a_score = (long double)A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
-    long double b_score = (long double)B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
+    long double a_score = (1 - A_pourcentage_traite_excentricites) / (long double)A->len_list_vertice;
+    long double b_score = (1 - B_pourcentage_traite_excentricites) / (long double)B->len_list_vertice;
 
-    return (a_score > b_score) - (a_score < b_score);
+    return (a_score < b_score) - (a_score > b_score);
 }
 
 int communities_size_sort_dsc_comp(const void* C, const void* D)
