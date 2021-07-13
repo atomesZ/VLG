@@ -7,10 +7,16 @@
 
 int main(int argc, char** argv)
 {
-    if (argc != 2)
+
+    char* default_tactic = (argc == 3) ? argv[2] : "RANDOM";
+    if (argc < 2 || argc >= 4)
     {
         fprintf(stderr, "We need the name of the file containing the graph\n");
         exit( EXIT_FAILURE );
+    }
+    if (argc < 3)
+    {
+        fprintf(stderr, "We need the name of a tactic, if not given, the random tactic is chosen\n");
     }
 
     FILE* fptr = fopen(argv[1], "r");
@@ -24,8 +30,6 @@ int main(int argc, char** argv)
     //On initialise le random
     srand(time(NULL));   // Initialization, should only be called once.
     igraph_rng_seed(igraph_rng_default(), 42);
-
-
 
     igraph_t graph;
 
@@ -66,7 +70,7 @@ int main(int argc, char** argv)
     int bool_custom_eccentricities = 1;
 
     if (bool_custom_eccentricities)
-        custom_eccentricities(&graph, num_vertices, file_eccentricities);
+        custom_eccentricities(&graph, num_vertices, file_eccentricities, default_tactic);
     else // igraph_eccentricities
         igraph_eccentricities(&graph, num_vertices, file_eccentricities);
 

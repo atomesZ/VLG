@@ -1,3 +1,4 @@
+#include <string.h>
 #include "eccentricities.h"
 
 long int tactique_1_random_old(W_list* W_head, unsigned long int len_W_list)
@@ -25,9 +26,9 @@ long int tactique_1_random(commu_stats_t* community)
 
     long int res = community->vertices_not_treated[i];
 
-    community->vertices_not_treated[i] = community->vertices_not_treated[len_vertices_not_treated - 1];
-    community->len_vertices_not_treated -= 1;
-    community->num_known_eccentricities += 1;
+    // community->vertices_not_treated[i] = community->vertices_not_treated[len_vertices_not_treated - 1];
+    // community->len_vertices_not_treated -= 1;
+    // community->num_known_eccentricities += 1;
 
     //printf("ID community : %ld  Remplissage : %f\n", community->id_community, (double)community->num_known_eccentricities / (double)community->len_list_vertice);
     return res;
@@ -40,6 +41,8 @@ int communities_size_sort_asc_comp(const void* C, const void* D)
 
     long double A_pourcentage_traite_excentricites = (long double)(A->num_known_eccentricities) / (long double)A->len_list_vertice;
     long double B_pourcentage_traite_excentricites = (long double)(B->num_known_eccentricities) / (long double)B->len_list_vertice;
+
+
 
     long double a_score = (long double)A->len_list_vertice * (1 - A_pourcentage_traite_excentricites);
     long double b_score = (long double)B->len_list_vertice * (1 - B_pourcentage_traite_excentricites);
@@ -164,7 +167,7 @@ igraph_t* get_largest_connected_component(igraph_t* graph)
     return largest_component;
 }
 
-void init_size_communities(graph_stats_t* graph_stats, igraph_vector_t* membership)
+void init_communities(graph_stats_t* graph_stats, igraph_vector_t* membership)
 {
     const unsigned long int len_membership = igraph_vector_size(membership);
 
@@ -260,18 +263,20 @@ void fill_without_communities(graph_stats_t* graph_stats, igraph_vector_t* degre
     graph_stats->modularity = 0;
 
     list_commus->list_vertice = calloc(graph_stats->num_vertices, sizeof(vertice_stats_t));
+    list_commus->vertices_not_treated = calloc(graph_stats->num_vertices, sizeof(long int));
     list_commus->len_list_vertice = 0;
 
     for (long unsigned int i = 0; i < graph_stats->num_vertices; ++i)
     {
         list_commus->list_vertice[i].value = i;
+        list_commus->vertices_not_treated[i] = i;
         list_commus->list_vertice[i].degree = VECTOR(*degrees)[i];
 
         list_commus->list_vertice[i].borne_inf = -MY_INF;
         list_commus->list_vertice[i].borne_sup = MY_INF;
         list_commus->len_list_vertice += 1;
     }
-
+    list_commus->len_vertices_not_treated = list_commus->len_list_vertice;
     graph_stats->list_commus = list_commus;
 }
 
@@ -354,10 +359,10 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
 
         //MODULARITY
         graph_stats->modularity = VECTOR(modularity)[igraph_vector_size(&modularity) - 1];
-        printf("MODULARITY : %ld\n", graph_stats->modularity);
+        printf("\nMODULARITY : %lf\n", graph_stats->modularity);
 
         //COMMUNITIES INTO GRAPH STATS
-        init_size_communities(graph_stats, &membership);
+        init_communities(graph_stats, &membership);
         fill_communities(graph_stats, &membership, &degrees);
 
         //FREE
@@ -427,25 +432,30 @@ void free_graph_stats(graph_stats_t* graph_stats)
     const unsigned long int len_list_commus = graph_stats->len_list_commus;
 
     for (unsigned long int index_commu = 0; index_commu < len_list_commus; index_commu++)
+    {
         free(list_commus[index_commu].list_vertice);
-
+        free(list_commus[index_commu].vertices_not_treated);
+    }
     free(list_commus);
     free(graph_stats);
 }
 
-long int select_from(graph_stats_t* graph_stats, W_list* W_head, unsigned long int len_W_list)
+long int select_from(graph_stats_t* graph_stats)
 {
     int selected_vertice = 0;
-    commu_stats_t* community = get_a_community(graph_stats);
 
     switch (graph_stats->tactique) {
         case RANDOM:
-            selected_vertice = tactique_1_random_old(W_head, len_W_list);
+        {
+            //selected_vertice = tactique_1_random_old(NULL, 0); // FIXME TODO WARNING
+            selected_vertice = tactique_1_random(graph_stats->list_commus);
             break;
+        }
         case COMMUNITY_SIZE_ASC_RANDOM:
         case COMMUNITY_SIZE_DSC_RANDOM:
         case COMMUNITY_RANDOM_RANDOM:
         {
+            commu_stats_t* community = get_a_community(graph_stats);
             selected_vertice = tactique_1_random(community);
             break;
         }
@@ -458,6 +468,17 @@ long int select_from(graph_stats_t* graph_stats, W_list* W_head, unsigned long i
     return selected_vertice;
 }
 
+int are_all_commu_treated(commu_stats_t* list_commus, unsigned long int len_list_commus)
+{
+    for (unsigned long int i_commu = 0; i_commu < len_list_commus; ++i_commu)
+    {
+        if (list_commus[i_commu].len_vertices_not_treated != 0)
+            return 0;
+    }
+
+    return 1;
+}
+
 unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, enum tactique tactique)
 {
     //trouver la plus grande Composante connexe
@@ -465,30 +486,30 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
     // On a commenté ce bout de code car les graphes fournis sont connexes
     graph_stats_t* graph_stats = get_graph_stats(graph, tactique);
 
-    unsigned long int len_W_list = graph_stats->num_vertices;
+    unsigned long int num_vertices = graph_stats->num_vertices;
     //INIT
-    W_list* W_head = linked_list_init(len_W_list);
-    unsigned long int* eccentricities = calloc(len_W_list, sizeof(unsigned long int));
-    long int* eccentricities_L = calloc(len_W_list, sizeof(long int));
-    long int* eccentricities_U = calloc(len_W_list, sizeof(long int));
+    //W_list* W_head = linked_list_init(graph_stats);
+    unsigned long int* eccentricities = calloc(num_vertices, sizeof(unsigned long int));
+    long int* eccentricities_L = calloc(num_vertices, sizeof(long int));
+    long int* eccentricities_U = calloc(num_vertices, sizeof(long int));
 
     // Algorithme de Takes et Kosters
     // Init
-    for (W_list* current_node = W_head; current_node; current_node = current_node->next)
+    for (unsigned long int i = 0; i < num_vertices; ++i)
     {
-        long int w = current_node->val;
         //eccentricities[w] = 0; // Unrequired since we used calloc
-        eccentricities_L[w] = -MY_INF;
-        eccentricities_U[w] = MY_INF;
+        eccentricities_L[i] = -MY_INF;
+        eccentricities_U[i] = MY_INF;
     }
 
+    commu_stats_t* list_commus = graph_stats->list_commus;
+    unsigned long int len_list_commus = graph_stats->len_list_commus;
 
-    // Nous calculons les excentricites de tout le graphe
-    while (W_head != NULL)
+    while (!are_all_commu_treated(list_commus, len_list_commus))
     {
         // Nous selectionnons le point initial par lequel on va commencer nos
         // calculs d'excentricite
-        const long int v = select_from(graph_stats, W_head, len_W_list);
+        const long int v = select_from(graph_stats);
 
         // on va calculer les distance de v par rapport aux w en meme temps que
         // le calcul d'excentricites (grâce aux BFS)
@@ -499,38 +520,87 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
         eccentricities[v] = get_vertice_eccentricity(graph, v, &distance);
         *num_bfs += 1;
 
-        W_list* prev_node = NULL;
-        W_list* current_node = W_head;
-        while (current_node != NULL)
+        for (unsigned long int i_commu = 0; i_commu < len_list_commus; ++i_commu)
         {
-            long int w = current_node->val;
-
-            //LES BORNES
-            long int d = VECTOR(distance)[w];
-            eccentricities_L[w] = fmax(eccentricities_L[w], fmax(eccentricities[v] - d, d));
-            eccentricities_U[w] = fmin(eccentricities_U[w], eccentricities[v] + d);//inf
-
-            // Si l'écart entre les deux bornes est inférieur à delta,
-            // alors nous avons trouve la bonne excentricite
-            if (eccentricities_U[w] - eccentricities_L[w] <= delta)
+            if (list_commus[i_commu].len_vertices_not_treated != 0)
             {
-                eccentricities[w] = eccentricities_L[w];
 
-                // Pop the value
-                linked_list_pop(prev_node, &current_node, &W_head);
+                long int* vertices_not_treated = list_commus[i_commu].vertices_not_treated;
+                for (unsigned long int i_vertices_not_treated = 0; i_vertices_not_treated < list_commus[i_commu].len_vertices_not_treated; ++i_vertices_not_treated)
+                {
+                    unsigned long int w = vertices_not_treated[i_vertices_not_treated];
+                    //LES BORNES
+                    long int d = VECTOR(distance)[w];
+                    eccentricities_L[w] = fmax(eccentricities_L[w], fmax(eccentricities[v] - d, d));
+                    eccentricities_U[w] = fmin(eccentricities_U[w], eccentricities[v] + d);//inf
 
+                    // Si l'écart entre les deux bornes est inférieur à delta,
+                    // alors nous avons trouve la bonne excentricite
+                    if (eccentricities_U[w] - eccentricities_L[w] <= delta)
+                    {
+                        eccentricities[w] = eccentricities_L[w];
 
-
-                len_W_list -= 1;
-            }
-            else
-            {
-                prev_node = current_node;
-                current_node = current_node->next;
+                        // Pop the value
+                        //linked_list_pop(prev_node, &current_node, &W_head);
+                        // We pop in vertices_not_treated
+                        list_commus[i_commu].num_known_eccentricities += 1;
+                        vertices_not_treated[i_vertices_not_treated] = vertices_not_treated[--(list_commus[i_commu].len_vertices_not_treated)];
+                        --i_vertices_not_treated; // We do this trick to re evaluate current vertice since we swapped
+                    }
+                }
             }
         }
-        igraph_vector_destroy(&distance);
+        igraph_vector_destroy(&distance); // FIXME, maybe use the same everytimes
     }
+
+
+    // // Nous calculons les excentricites de tout le graphe
+    // while (W_head != NULL)
+    // {
+    //     // Nous selectionnons le point initial par lequel on va commencer nos
+    //     // calculs d'excentricite
+    //     const long int v = select_from(graph_stats, W_head, len_W_list);
+    //
+    //     // on va calculer les distance de v par rapport aux w en meme temps que
+    //     // le calcul d'excentricites (grâce aux BFS)
+    //     igraph_vector_t distance; // = calloc(num_vertices, sizeof(long int));
+    //     igraph_vector_init(&distance, graph_stats->num_vertices);
+    //
+    //     //calcul d'excentricites
+    //     eccentricities[v] = get_vertice_eccentricity(graph, v, &distance);
+    //     *num_bfs += 1;
+    //
+    //     W_list* prev_node = NULL;
+    //     W_list* current_node = W_head;
+    //     while (current_node != NULL)
+    //     {
+    //         long int w = current_node->val;
+    //
+    //         //LES BORNES
+    //         long int d = VECTOR(distance)[w];
+    //         eccentricities_L[w] = fmax(eccentricities_L[w], fmax(eccentricities[v] - d, d));
+    //         eccentricities_U[w] = fmin(eccentricities_U[w], eccentricities[v] + d);//inf
+    //
+    //         // Si l'écart entre les deux bornes est inférieur à delta,
+    //         // alors nous avons trouve la bonne excentricite
+    //         if (eccentricities_U[w] - eccentricities_L[w] <= delta)
+    //         {
+    //             eccentricities[w] = eccentricities_L[w];
+    //
+    //             // Pop the value
+    //             linked_list_pop(prev_node, &current_node, &W_head);
+    //
+    //
+    //             len_W_list -= 1;
+    //         }
+    //         else
+    //         {
+    //             prev_node = current_node;
+    //             current_node = current_node->next;
+    //         }
+    //     }
+    //     igraph_vector_destroy(&distance);
+    // }
 
     free_graph_stats(graph_stats);
     free(eccentricities_L);
@@ -539,18 +609,45 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
     return eccentricities;
 }
 
+enum tactique string_to_tactique(char* tactique_str)
+{
+    if (strcmp(tactique_str, "RANDOM") == 0)
+        return RANDOM;
+    if (strcmp(tactique_str, "HIGH_DEGREE") == 0)
+        return HIGH_DEGREE;
+
+    if (strcmp(tactique_str, "COMMUNITY_SIZE_ASC_RANDOM") == 0)
+        return COMMUNITY_SIZE_ASC_RANDOM;
+    if (strcmp(tactique_str, "COMMUNITY_SIZE_DSC_RANDOM") == 0)
+        return COMMUNITY_SIZE_DSC_RANDOM;
+    if (strcmp(tactique_str, "COMMUNITY_SIZE_ASC_HIGH_DEGREE") == 0)
+        return COMMUNITY_SIZE_ASC_HIGH_DEGREE;
+    if (strcmp(tactique_str, "COMMUNITY_SIZE_DSC_HIGH_DEGREE") == 0)
+        return COMMUNITY_SIZE_DSC_HIGH_DEGREE;
+
+    if (strcmp(tactique_str, "COMMUNITY_RANDOM_RANDOM") == 0)
+        return COMMUNITY_RANDOM_RANDOM;
+    if (strcmp(tactique_str, "COMMUNITY_RANDOM_HIGH_DEGREE") == 0)
+        return COMMUNITY_RANDOM_HIGH_DEGREE;
+
+    return RANDOM;
+}
+
 void custom_eccentricities(igraph_t* graph,
                             unsigned long int num_vertices,
-                            FILE* file_eccentricities)
+                            FILE* file_eccentricities,
+                            char* tactique_str)
 {
     unsigned long int num_bfs = 0;
     int delta = 0;
 
+    enum tactique tactique = string_to_tactique(tactique_str);
 
-    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, COMMUNITY_SIZE_DSC_RANDOM);
+    unsigned long int* res_eccentricities = get_eccentricities(graph, delta, &num_bfs, tactique);
     printf("Eccentricities: OK\n");
     printf("Value of delta: %d\n", delta);
     printf("Number of BFS used: %ld\n", num_bfs);
+    printf("Tactique: %s\n", tactique_str);
 
     for (unsigned long int i = 0; i < num_vertices; ++i)
         fprintf(file_eccentricities, "%ld ", (long) res_eccentricities[i]);

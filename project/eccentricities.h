@@ -28,7 +28,7 @@ long int get_vertice_eccentricity(igraph_t* graph, long int v, igraph_vector_t* 
 
 igraph_t* get_largest_connected_component(igraph_t* graph);
 
-void init_size_communities(graph_stats_t* graph_stats, igraph_vector_t* membership);
+void init_communities(graph_stats_t* graph_stats, igraph_vector_t* membership);
 
 void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, igraph_vector_t* degrees);
 
@@ -44,13 +44,14 @@ graph_stats_t* get_graph_stats(igraph_t* graph, enum tactique tactique);
 
 void free_graph_stats(graph_stats_t* graph_stats);
 
-long int select_from(graph_stats_t* graph_stats, W_list* W_head, unsigned long int len_W_list);
+long int select_from(graph_stats_t* graph_stats);
 
 unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, enum tactique tactique);
 
 void custom_eccentricities(igraph_t* graph,
                             unsigned long int num_vertices,
-                            FILE* file_eccentricities);
+                            FILE* file_eccentricities,
+                            char* tactique_str);
 
 
 #endif /* end of include guard: ECCENTRICITIES_H */
