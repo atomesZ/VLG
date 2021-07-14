@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     char* res_filename =  "eccentricities.txt";
     FILE* file_eccentricities = fopen(res_filename, "w");
 
-    if (strcmp(default_tactic, "IGRAPH"))
+    if (strcmp(default_tactic, "IGRAPH")) // If we don't want to use IGRAPH
         custom_eccentricities(&graph, num_vertices, file_eccentricities, default_tactic, delta);
     else // igraph_eccentricities
         igraph_eccentricities(&graph, num_vertices, file_eccentricities);

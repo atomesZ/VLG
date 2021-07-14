@@ -416,7 +416,7 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
 
         //MODULARITY
         graph_stats->modularity = VECTOR(modularity)[igraph_vector_size(&modularity) - 1];
-        printf("MODULARITY : %lf\n", graph_stats->modularity);
+        printf("MODULARITY: %lf\n", graph_stats->modularity);
         //igraph_real_t *modularityy = malloc(sizeof(igraph_real_t *));
         //igraph_modularity(graph, &membership, NULL, 1, 0, modularityy);
         //printf("\nMODULARITY : %lf\n", *modularityy);
@@ -430,6 +430,8 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
         //FREE
         igraph_vector_destroy(&modularity);
         igraph_vector_destroy(&membership);
+
+        printf("Number of communities: %ld\n", graph_stats->len_list_commus);
 
 
         //SORT

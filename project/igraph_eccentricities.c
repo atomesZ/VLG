@@ -21,7 +21,7 @@ void igraph_eccentricities(igraph_t* graph,
 
     if (graph_error_code)
     {
-        fprintf(stderr, "Could not get eccentricity\n");
+        fprintf(stderr, "Could not get eccentricities\n");
         exit( EXIT_FAILURE );
     }
 
