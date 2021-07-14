@@ -104,7 +104,26 @@ int main(int argc, char** argv)
     //printf("Diameter: %ld\n", (long int) diameter);
     printf("Average degree: %g\n", 2.0 * num_edges / num_vertices);
 
-    char* res_filename =  "eccentricities.txt";
+
+    // This block is to get the name of the output file
+    char* delta_str = (argc == 4) ? argv[3] : "0";
+    char res[250] = "eccentricities_";
+    char r2[150];
+    strcpy(r2, argv[1]);
+    size_t i_r2 = strlen(r2) - 1;
+    while (i_r2 != 0 && r2[i_r2] != '/')
+        --i_r2;
+    if (r2[i_r2] == '/')
+        ++i_r2;
+
+    char* short_r2 = r2 + i_r2;
+    strcat(res, short_r2);
+    strcat(res, "_");
+    strcat(res, delta_str);
+    strcat(res, ".txt");
+
+    char* res_filename = res;
+
     FILE* file_eccentricities = fopen(res_filename, "w");
 
     if (strcmp(default_tactic, "IGRAPH")) // If we don't want to use IGRAPH

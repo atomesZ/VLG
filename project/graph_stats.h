@@ -66,8 +66,6 @@ typedef struct commu_stats {
 } commu_stats_t;
 
 typedef struct graph_stats {
-    igraph_t* whole_graph;
-
     igraph_t* graph; // largest connected component
 
     commu_stats_t* list_commus; // if not using commus, then this list will have 1 value : the graph

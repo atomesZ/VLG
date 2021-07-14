@@ -1,5 +1,5 @@
 TARGET="get_eccentricities"
-PATH_TEST_GRAPH="../data_graphs/com-amazon.ungraph.txt"
+PATH_TEST_GRAPH="../data_graphs/facebook_combined.txt"
 
 all:
 	gcc *.c -Wall -Wextra -I/usr/local/include/igraph/ -L/usr/local/lib -ligraph -lm -o $(TARGET) -O3

@@ -15,19 +15,23 @@ class bcolors:
 
 def apply_tactic(tactic: str, delta: int, graph_path: str) -> list:
 
+    graph_path_end = graph_path.split("/")[-1]
+
+    filename = f"eccentricities_{graph_path_end}_{str(delta)}.txt"
+
     bash_res = os.system(f"../get_eccentricities {graph_path} {tactic} {delta}")
 
     if bash_res:
         print("We encountered some errors")
         exit(bash_res)
 
-    with open("eccentricities.txt", 'r') as f:
+    with open(filename, 'r') as f:
         lines = f.readlines()
 
         res = lines[0].split(" ")
 
     # cleanup
-    os.remove("eccentricities.txt")
+    os.remove(filename)
 
     return res
 
@@ -46,7 +50,7 @@ def get_percentage_likelyhood(igraph_res, res):
 
 
 def main():
-    delta = 2
+    delta = 0
     tactics = [
         "RANDOM",
         "HIGH_DEGREE",
@@ -71,7 +75,7 @@ def main():
     graph_path = sys.argv[1]
 
     print("We try IGRAPH method")
-    igraph_res = [] #apply_tactic("IGRAPH", delta, graph_path)
+    igraph_res = apply_tactic("IGRAPH", delta, graph_path)
 
     print("We now try all our tactics:")
 
@@ -90,8 +94,6 @@ def main():
 
     if num_success != len(tactics):
         print(f"SUMMARY: We have some {bcolors.FAIL}KO{bcolors.ENDC}\n")
-
-
 
 
 if __name__ == "__main__":
