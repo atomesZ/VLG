@@ -16,9 +16,6 @@ void free_complist(igraph_vector_ptr_t *complist) {
 
 int main(int argc, char** argv)
 {
-    while (21)
-        printf("Bon anniv !!!              "); // Bon par contre j'ai menti j'ai rien fix du tout ^^'
-
     // We create a simple help menu to be user friendly
     if ((argc < 2 || argc >= 5) || (argc == 2 && strcmp(argv[1], "--help") == 0))
     {
