@@ -44,12 +44,12 @@ long int tactique_4_big_delta(commu_stats_t* community)
     const unsigned long int len_vertices_not_treated = community->len_vertices_not_treated;
 
     int big_delta_index = 0;
-    for (unsigned long int i = 1; i < len_vertices_not_treated; i++)
+    for (unsigned long int i = 1; i < len_vertices_not_treated; ++i)
     {
-        long int big_delta_i = community->vertices_not_treated[i]->borne_sup - community->vertices_not_treated[i]->borne_inf;
-        long int big_delta_index = community->vertices_not_treated[big_delta_index]->borne_sup - community->vertices_not_treated[big_delta_index]->borne_inf;
+        long int big_delta_value_i = community->vertices_not_treated[i]->borne_sup - community->vertices_not_treated[i]->borne_inf;
+        long int big_delta_value_index = community->vertices_not_treated[big_delta_index]->borne_sup - community->vertices_not_treated[big_delta_index]->borne_inf;
 
-        if (big_delta_index < big_delta_i)
+        if (big_delta_value_index < big_delta_value_i)
             big_delta_index = i;
     }
 
@@ -246,6 +246,15 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
     commu_stats_t* list_commus = graph_stats->list_commus;
     const unsigned long int len_membership = igraph_vector_size(membership);
 
+    igraph_vit_t vit;
+    igraph_vit_create(graph_stats->graph, igraph_vss_all(), &vit);
+
+    if ((long int)len_membership != IGRAPH_VIT_SIZE(vit))
+    {
+        fprintf(stderr, "Error in code: the len of 'membership' should be equal to the number of vertices here\n");
+        exit( EXIT_FAILURE );
+    }
+
     for (unsigned long int i = 0; i < len_membership; i++)
     {
         unsigned long int j = 0;
@@ -263,7 +272,7 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
             list_commus[j].vertices_not_treated = calloc(list_commus[j].len_list_vertice, sizeof(vertice_stats_t*));
             list_commus[j].len_vertices_not_treated = list_commus[j].len_list_vertice;
 
-            list_commus[j].list_vertice[0].value = i;
+            list_commus[j].list_vertice[0].value = IGRAPH_VIT_GET(vit);
             list_commus[j].vertices_not_treated[0] = &(list_commus[j].list_vertice[0]);
 
             list_commus[j].list_vertice[0].degree = VECTOR(*degrees)[i];
@@ -275,7 +284,7 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
         }
         else if (list_commus[j].fill_list_vertice < list_commus[j].len_list_vertice)
         {
-            list_commus[j].list_vertice[list_commus[j].fill_list_vertice].value = i;
+            list_commus[j].list_vertice[list_commus[j].fill_list_vertice].value = IGRAPH_VIT_GET(vit);
             list_commus[j].vertices_not_treated[list_commus[j].fill_list_vertice] = &(list_commus[j].list_vertice[list_commus[j].fill_list_vertice]);;
             list_commus[j].fill_list_vertice += 1;
         }
@@ -285,7 +294,11 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
             printf("%s\n", "aaaaa PAS CENSE ETRE LA");
             exit( EXIT_FAILURE );
         }
+
+        IGRAPH_VIT_NEXT(vit);
     }
+
+    igraph_vit_destroy(&vit);
 
     graph_stats->list_commus = list_commus;
 }
@@ -313,16 +326,32 @@ void fill_without_communities(graph_stats_t* graph_stats, igraph_vector_t* degre
     list_commus->vertices_not_treated = calloc(graph_stats->num_vertices, sizeof(vertice_stats_t*));
     list_commus->len_list_vertice = 0;
 
-    for (long unsigned int i = 0; i < graph_stats->num_vertices; ++i)
+    igraph_vit_t vit;
+    igraph_vit_create(graph_stats->graph, igraph_vss_all(), &vit);
+
+    const unsigned long int num_vertices = graph_stats->num_vertices;
+
+    if ((long int)num_vertices != IGRAPH_VIT_SIZE(vit))
     {
-        list_commus->list_vertice[i].value = i;
+        fprintf(stderr, "Error in code: the len of 'membership' should be equal to the number of vertices here\n");
+        exit( EXIT_FAILURE );
+    }
+
+    for (long unsigned int i = 0; i < num_vertices; ++i)
+    {
+        list_commus->list_vertice[i].value = IGRAPH_VIT_GET(vit);
         list_commus->vertices_not_treated[i] = &(list_commus->list_vertice[i]);
         list_commus->list_vertice[i].degree = VECTOR(*degrees)[i];
 
         list_commus->list_vertice[i].borne_inf = -MY_INF;
         list_commus->list_vertice[i].borne_sup = MY_INF;
         list_commus->len_list_vertice += 1;
+
+        IGRAPH_VIT_NEXT(vit);
     }
+
+    igraph_vit_destroy(&vit);
+
     list_commus->len_vertices_not_treated = list_commus->len_list_vertice;
     graph_stats->list_commus = list_commus;
 }
@@ -406,7 +435,7 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
 
         //MODULARITY
         graph_stats->modularity = VECTOR(modularity)[igraph_vector_size(&modularity) - 1];
-        printf("\nMODULARITY : %lf\n", graph_stats->modularity);
+        printf("MODULARITY : %lf\n", graph_stats->modularity);
         //igraph_real_t *modularityy = malloc(sizeof(igraph_real_t *));
         //igraph_modularity(graph, &membership, NULL, 1, 0, modularityy);
         //printf("\nMODULARITY : %lf\n", *modularityy);
@@ -438,10 +467,16 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
     return graph_stats->list_commus;
 }
 
-graph_stats_t* get_graph_stats(igraph_t* graph, enum tactique tactique)
+graph_stats_t* get_graph_stats(igraph_t* whole_graph, enum tactique tactique)
 {
     graph_stats_t* graph_stats = calloc(1, sizeof(graph_stats_t));
-    graph_stats->graph = graph;
+
+    graph_stats->whole_graph = whole_graph;
+
+    graph_stats->graph = whole_graph;
+
+    //graph_stats->graph = get_largest_connected_component(whole_graph);
+    igraph_t* graph = graph_stats->graph;
 
     graph_stats->num_vertices = igraph_vcount(graph);
     graph_stats->tactique = tactique;
@@ -573,12 +608,14 @@ int are_all_commu_treated(commu_stats_t* list_commus, unsigned long int len_list
     return 1;
 }
 
-unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, enum tactique tactique)
+unsigned long int* get_eccentricities(igraph_t* whole_graph, int delta, unsigned long int* num_bfs, enum tactique tactique)
 {
     //trouver la plus grande Composante connexe
     //graph = get_largest_connected_component(graph);
     // On a commenté ce bout de code car les graphes fournis sont connexes
-    graph_stats_t* graph_stats = get_graph_stats(graph, tactique);
+    graph_stats_t* graph_stats = get_graph_stats(whole_graph, tactique);
+
+    igraph_t* graph = graph_stats->graph;
 
     unsigned long int num_vertices = graph_stats->num_vertices;
     //INIT
@@ -610,19 +647,6 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
         //calcul d'excentricites
         eccentricities[v] = get_vertice_eccentricity(graph, v, &distance);
         *num_bfs += 1;
-
-        if (*num_bfs % 1 == 0)
-        {
-            commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
-            unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
-            unsigned long int num_not_treated_vertices = 0;
-            for (unsigned long int i = 0; i < len_commus_not_treated; ++i)
-            {
-                num_not_treated_vertices += commus_not_treated[i]->len_vertices_not_treated;
-            }
-            printf("\rProgress bar eccentricities calculated: %Lf%%   \e[?25l", (1 - (long double)num_not_treated_vertices / graph_stats->num_vertices));
-            fflush(stdout);
-        }
 
         for (unsigned long int i_commu = 0; i_commu < graph_stats->len_commus_not_treated; ++i_commu)
         {
@@ -669,6 +693,18 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
             }
         }
         igraph_vector_destroy(&distance); // FIXME, maybe use the same everytimes
+        if (*num_bfs % 10 == 0)
+        {
+            commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
+            unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
+            unsigned long int num_not_treated_vertices = 0;
+            for (unsigned long int i = 0; i < len_commus_not_treated; ++i)
+            {
+                num_not_treated_vertices += commus_not_treated[i]->len_vertices_not_treated;
+            }
+            printf("\rProgress bar eccentricities calculated: %Lf%%   \e[?25l", (1 - (long double)num_not_treated_vertices / graph_stats->num_vertices) * 100);
+            fflush(stdout);
+        }
     }
 
     free_graph_stats(graph_stats);

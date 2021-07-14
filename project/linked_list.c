@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "linked_list.h"
 
+
 W_list* linked_list_init(graph_stats_t* graph_stats)
 {
     W_list* head = NULL;

@@ -48,16 +48,14 @@ int main(int argc, char** argv)
 
 
     // Get diameter and average degree
-    igraph_real_t diameter;
+    //igraph_real_t diameter;
+    //igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
+
     unsigned long int num_edges = igraph_ecount(&graph);
     unsigned long int num_vertices = igraph_vcount(&graph);
 
     printf("Number of edges: %ld\n", num_edges);
     printf("Number of vertices: %ld\n", num_vertices);
-
-
-
-    //igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
 
 
     //printf("Diameter: %ld\n", (long int) diameter);
