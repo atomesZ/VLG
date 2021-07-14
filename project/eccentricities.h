@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "linked_list.h"
+#include "graph_stats.h"
 
 // We could use LONG_MAX from limits.h instead
 #define MY_INF 9223372036854775807

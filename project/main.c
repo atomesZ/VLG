@@ -6,6 +6,14 @@
 #include "eccentricities.h"
 #include "igraph_eccentricities.h"
 
+void free_complist(igraph_vector_ptr_t *complist) {
+    long int i;
+    for (i = 0; i < igraph_vector_ptr_size(complist); i++) {
+        igraph_destroy(VECTOR(*complist)[i]);
+        igraph_free(VECTOR(*complist)[i]);
+    }
+}
+
 int main(int argc, char** argv)
 {
     // We create a simple help menu to be user friendly
@@ -62,9 +70,9 @@ int main(int argc, char** argv)
     srand(time(NULL));   // Initialization, should only be called once.
     igraph_rng_seed(igraph_rng_default(), 42);
 
-    igraph_t graph;
+    igraph_t whole_graph;
 
-    int graph_error_code = igraph_read_graph_edgelist(&graph, fptr, 0, 0);
+    int graph_error_code = igraph_read_graph_edgelist(&whole_graph, fptr, 0, 0);
     fclose(fptr);
 
 
@@ -76,13 +84,18 @@ int main(int argc, char** argv)
 
     printf("Graph loading of '%s': OK\n", argv[1]);
 
+    // Trouver la plus grande Composante connexe
+    igraph_vector_ptr_t components;
+    igraph_vector_ptr_init(&components, 0);
+    igraph_t* graph = get_largest_connected_component(&whole_graph, &components);
+
 
     // Get diameter and average degree
     //igraph_real_t diameter;
     //igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
 
-    unsigned long int num_edges = igraph_ecount(&graph);
-    unsigned long int num_vertices = igraph_vcount(&graph);
+    unsigned long int num_edges = igraph_ecount(graph);
+    unsigned long int num_vertices = igraph_vcount(graph);
 
     printf("Number of edges: %ld\n", num_edges);
     printf("Number of vertices: %ld\n", num_vertices);
@@ -95,14 +108,16 @@ int main(int argc, char** argv)
     FILE* file_eccentricities = fopen(res_filename, "w");
 
     if (strcmp(default_tactic, "IGRAPH")) // If we don't want to use IGRAPH
-        custom_eccentricities(&graph, num_vertices, file_eccentricities, default_tactic, delta);
+        custom_eccentricities(graph, num_vertices, file_eccentricities, default_tactic, delta);
     else // igraph_eccentricities
-        igraph_eccentricities(&graph, num_vertices, file_eccentricities);
+        igraph_eccentricities(graph, num_vertices, file_eccentricities);
 
     printf("We outputed the eccentricities in the file '%s'\n", res_filename);
     fclose(file_eccentricities);
 
-    igraph_destroy(&graph);
+    free_complist(&components);
+    igraph_vector_ptr_destroy(&components);
+    igraph_destroy(&whole_graph);
     printf("Destroy: OK\n");
 
     return 0;

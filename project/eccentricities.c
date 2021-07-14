@@ -342,7 +342,7 @@ void set_commus_stats(graph_stats_t* graph_stats)
     //STATS
     const unsigned long int len_list_commus = graph_stats->len_list_commus;
     commu_stats_t* list_commus = graph_stats->list_commus;
-    // TODO for loop to retrieve those infos
+    // for loop to retrieve those infos
     // for each commus
     for (unsigned long int i = 0; i < len_list_commus; ++i)
     {
@@ -373,7 +373,8 @@ void set_commus_stats(graph_stats_t* graph_stats)
             }
 
             // mean degree without overflow nor underflow
-            mean_degree += (current_degree - mean_degree) / (j + 1); //FIXME for example : 0.98 shouldnt be possible
+            //WARNING for example : 0.98 shouldnt be possible so it is probably bugged (but not used anyways so we good)
+            mean_degree += (current_degree - mean_degree) / (j + 1);
         }
         //STATS
         current_commu->mean_degree = mean_degree;
@@ -381,8 +382,8 @@ void set_commus_stats(graph_stats_t* graph_stats)
         current_commu->max_degree = max_degree;
         current_commu->i_min_degree = i_min_degree;
         current_commu->i_max_degree = i_max_degree;
-        current_commu->mean_borne_inf = -MY_INF;
-        current_commu->mean_borne_sup = MY_INF; //TODO, may cause problems
+        current_commu->mean_borne_inf = -MY_INF; //Not implemented yet
+        current_commu->mean_borne_sup = MY_INF; //Not implemented yet
 
         current_commu->num_known_eccentricities = 0;
     }
@@ -514,13 +515,11 @@ long int select_from(graph_stats_t* graph_stats)
     switch (graph_stats->tactique) {
         case RANDOM:
         {
-            //selected_vertice = tactique_1_random_old(NULL, 0); // FIXME TODO WARNING
             selected_vertice = tactique_1_random(graph_stats->list_commus);
             break;
         }
         case HIGH_DEGREE:
         {
-            //selected_vertice = tactique_1_random_old(NULL, 0); // FIXME TODO WARNING
             selected_vertice = tactique_2_high_degree(graph_stats->list_commus);
             break;
         }
@@ -601,29 +600,13 @@ igraph_t* get_largest_connected_component(igraph_t* graph, igraph_vector_ptr_t* 
     return largest_component;
 }
 
-void free_complist(igraph_vector_ptr_t *complist) {
-    long int i;
-    for (i = 0; i < igraph_vector_ptr_size(complist); i++) {
-        igraph_destroy(VECTOR(*complist)[i]);
-        igraph_free(VECTOR(*complist)[i]);
-    }
-}
-
-
 unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, enum tactique tactique)
 {
-    // Trouver la plus grande Composante connexe
-    igraph_vector_ptr_t components;
-    igraph_vector_ptr_init(&components, 0);
-    graph = get_largest_connected_component(graph, &components);
-
     // Obtenir des informations sur le graphe
     graph_stats_t* graph_stats = get_graph_stats(graph, tactique);
 
-
     unsigned long int num_vertices = graph_stats->num_vertices;
     //INIT
-    //W_list* W_head = linked_list_init(graph_stats);
     unsigned long int* eccentricities = calloc(num_vertices, sizeof(unsigned long int));
     long int* eccentricities_L = calloc(num_vertices, sizeof(long int));
     long int* eccentricities_U = calloc(num_vertices, sizeof(long int));
@@ -632,7 +615,6 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
     // Init
     for (unsigned long int i = 0; i < num_vertices; ++i)
     {
-        //eccentricities[w] = 0; // Unrequired since we used calloc
         eccentricities_L[i] = -MY_INF;
         eccentricities_U[i] = MY_INF;
     }
@@ -654,7 +636,7 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
 
         for (unsigned long int i_commu = 0; i_commu < graph_stats->len_commus_not_treated; ++i_commu)
         {
-            if (graph_stats->commus_not_treated[i_commu]->len_vertices_not_treated != 0) // removable TODO FIXME
+            if (graph_stats->commus_not_treated[i_commu]->len_vertices_not_treated != 0) // removable tho
             {
                 vertice_stats_t** vertices_not_treated = graph_stats->commus_not_treated[i_commu]->vertices_not_treated;
                 for (unsigned long int i_vertices_not_treated = 0;
@@ -696,7 +678,7 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
                 }
             }
         }
-        igraph_vector_destroy(&distance); // FIXME, maybe use the same everytimes
+        igraph_vector_destroy(&distance); // possible optimization: use the same everytimes
         if (*num_bfs % 10 == 0)
         {
             commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
@@ -714,8 +696,6 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
     free_graph_stats(graph_stats);
     free(eccentricities_L);
     free(eccentricities_U);
-    free_complist(&components);
-    igraph_vector_ptr_destroy(&components);
 
     printf("\e[?25h\n");
 

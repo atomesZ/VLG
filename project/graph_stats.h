@@ -1,5 +1,5 @@
-#ifndef LINKED_LIST_H
-#define LINKED_LIST_H
+#ifndef GRAPH_STATS_H
+#define GRAPH_STATS_H
 
 #include <stdlib.h>
 #include <igraph.h>
@@ -38,8 +38,8 @@ enum tactique {
 typedef struct vertice_stats {
     long int value;
     unsigned int degree;
-    long int borne_inf; // TODO
-    long int borne_sup; // TODO
+    long int borne_inf;
+    long int borne_sup;
 } vertice_stats_t;
 
 typedef struct commu_stats {
@@ -49,8 +49,7 @@ typedef struct commu_stats {
     //for construction only
     unsigned long int fill_list_vertice;
 
-    // FIXME Maybe use this for commu as well (commu_not_treated) to be faster
-    vertice_stats_t** vertices_not_treated; // FIXME Maybe change this for an array of pointer to vertice_stats
+    vertice_stats_t** vertices_not_treated;
     unsigned long int len_vertices_not_treated;
 
     //STATS
@@ -59,10 +58,10 @@ typedef struct commu_stats {
     unsigned long int max_degree;
     unsigned long int i_min_degree;
     unsigned long int i_max_degree;
-    long int mean_borne_inf; // TODO
-    long int mean_borne_sup; // TODO
+    long int mean_borne_inf; // Not implemented yet
+    long int mean_borne_sup; // Not implemented yet
 
-    unsigned long int num_known_eccentricities; //FIXME je suis en trop avec len_vertices_not_treated
+    unsigned long int num_known_eccentricities;
 
 } commu_stats_t;
 
@@ -81,24 +80,11 @@ typedef struct graph_stats {
     enum tactique tactique;
 
     //STATS
-    double modularity; // FIXME (always 0 somehow)
+    double modularity;
     unsigned long int min_len_list_vertice;
     unsigned long int max_len_list_vertice;
     unsigned long int i_min_len_list_vertice;
     unsigned long int i_max_len_list_vertice;
 } graph_stats_t;
 
-typedef struct node {
-    long int val;
-    struct node* next;
-    commu_stats_t* my_commu;
-    unsigned long int i_vertices_not_treated;
-} W_list;
-
-
-//FIXME
-W_list* linked_list_init(graph_stats_t* graph_stats);
-
-void linked_list_pop(W_list* prev_node, W_list** current_node, W_list** W_head);
-
-#endif /* end of include guard: LINKED_LIST_H */
+#endif /* end of include guard: GRAPH_STATS_H */

@@ -13,9 +13,9 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-def apply_tactic(tactic: str, graph_path: str) -> list:
+def apply_tactic(tactic: str, delta: int, graph_path: str) -> list:
 
-    bash_res = os.system(f"../get_eccentricities {graph_path} {tactic}")
+    bash_res = os.system(f"../get_eccentricities {graph_path} {tactic} {delta}")
 
     if bash_res:
         print("We encountered some errors")
@@ -31,9 +31,22 @@ def apply_tactic(tactic: str, graph_path: str) -> list:
 
     return res
 
+def get_percentage_likelyhood(igraph_res, res):
+    if len(igraph_res) != len(res):
+        print("We did not count the same amount of eccentricities")
+        return 0
+
+    num_same = 0
+
+    for i in range(len(igraph_res)):
+        if igraph_res[i] == res[i]:
+            num_same += 1
+
+    return (num_same / len(igraph_res)) * 100
+
 
 def main():
-
+    delta = 2
     tactics = [
         "RANDOM",
         "HIGH_DEGREE",
@@ -57,16 +70,20 @@ def main():
 
     graph_path = sys.argv[1]
 
-    igraph_res = apply_tactic("IGRAPH", graph_path)
+    print("We try IGRAPH method")
+    igraph_res = [] #apply_tactic("IGRAPH", delta, graph_path)
+
+    print("We now try all our tactics:")
 
     num_success = 0
-
     for tactic in tactics:
-        res = apply_tactic(tactic, graph_path)
+        res = apply_tactic(tactic, delta, graph_path)
 
-        if igraph_res != res:
-            print(f"{tactic}: {bcolors.FAIL}KO{bcolors.ENDC}\n")
-            print(res)
+        percentage_likelyhood = get_percentage_likelyhood(igraph_res, res)
+
+        if percentage_likelyhood != 100:
+            print(f"{tactic}: {bcolors.FAIL}KO{bcolors.ENDC}")
+            print("We got: {:.2f}% of good eccentricities\n".format(percentage_likelyhood))
         else:
             print(f"{tactic}: {bcolors.OKGREEN}OK{bcolors.ENDC}\n")
             num_success += 1
