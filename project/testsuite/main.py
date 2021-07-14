@@ -75,7 +75,7 @@ def main():
     graph_path = sys.argv[1]
 
     print("We try IGRAPH method")
-    igraph_res = apply_tactic("IGRAPH", delta, graph_path)
+    igraph_res = []#apply_tactic("IGRAPH", delta, graph_path)
 
     print("We now try all our tactics:")
 
