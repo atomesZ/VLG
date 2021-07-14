@@ -183,25 +183,6 @@ long int get_vertice_eccentricity(igraph_t* graph, long int v, igraph_vector_t* 
     return igraph_vector_max(distance);
 }
 
-igraph_t* get_largest_connected_component(igraph_t* graph)
-{
-    igraph_vector_ptr_t components;
-    igraph_vector_ptr_init(&components, 0);
-    igraph_decompose(graph, &components, IGRAPH_WEAK, -1, 2);
-
-    // a voir si il existe pas un max pour igraph_vector_ptr_t
-    igraph_vector_ptr_sort(&components, igraph_vector_colex_cmp);
-    //le premier element est le plus grand
-    igraph_t* largest_component = NULL;
-    largest_component = igraph_vector_ptr_e(&components, 0);
-
-    //faut faire attention a ne pas free le largest_component
-    //igraph_decompose_destroy(&components);
-    //free_complist(&components);
-    //igraph_vector_ptr_destroy(&components);
-
-    return largest_component;
-}
 
 void init_communities(graph_stats_t* graph_stats, igraph_vector_t* membership)
 {
@@ -467,16 +448,11 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
     return graph_stats->list_commus;
 }
 
-graph_stats_t* get_graph_stats(igraph_t* whole_graph, enum tactique tactique)
+graph_stats_t* get_graph_stats(igraph_t* graph, enum tactique tactique)
 {
     graph_stats_t* graph_stats = calloc(1, sizeof(graph_stats_t));
 
-    graph_stats->whole_graph = whole_graph;
-
-    graph_stats->graph = whole_graph;
-
-    //graph_stats->graph = get_largest_connected_component(whole_graph);
-    igraph_t* graph = graph_stats->graph;
+    graph_stats->graph = graph;
 
     graph_stats->num_vertices = igraph_vcount(graph);
     graph_stats->tactique = tactique;
@@ -608,14 +584,40 @@ int are_all_commu_treated(commu_stats_t* list_commus, unsigned long int len_list
     return 1;
 }
 
-unsigned long int* get_eccentricities(igraph_t* whole_graph, int delta, unsigned long int* num_bfs, enum tactique tactique)
-{
-    //trouver la plus grande Composante connexe
-    //graph = get_largest_connected_component(graph);
-    // On a commenté ce bout de code car les graphes fournis sont connexes
-    graph_stats_t* graph_stats = get_graph_stats(whole_graph, tactique);
 
-    igraph_t* graph = graph_stats->graph;
+igraph_t* get_largest_connected_component(igraph_t* graph, igraph_vector_ptr_t* components)
+{
+
+    igraph_decompose(graph, components, IGRAPH_WEAK, -1, 2);
+
+    // a voir si il existe pas un max pour igraph_vector_ptr_t
+    igraph_vector_ptr_sort(components, igraph_vector_colex_cmp);
+    //le premier element est le plus grand
+    igraph_t* largest_component = NULL;
+    largest_component = igraph_vector_ptr_e(components, 0);
+
+    return largest_component;
+}
+
+void free_complist(igraph_vector_ptr_t *complist) {
+    long int i;
+    for (i = 0; i < igraph_vector_ptr_size(complist); i++) {
+        igraph_destroy(VECTOR(*complist)[i]);
+        igraph_free(VECTOR(*complist)[i]);
+    }
+}
+
+
+unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long int* num_bfs, enum tactique tactique)
+{
+    // Trouver la plus grande Composante connexe
+    igraph_vector_ptr_t components;
+    igraph_vector_ptr_init(&components, 0);
+    graph = get_largest_connected_component(graph, &components);
+
+    // Obtenir des informations sur le graphe
+    graph_stats_t* graph_stats = get_graph_stats(graph, tactique);
+
 
     unsigned long int num_vertices = graph_stats->num_vertices;
     //INIT
@@ -710,6 +712,8 @@ unsigned long int* get_eccentricities(igraph_t* whole_graph, int delta, unsigned
     free_graph_stats(graph_stats);
     free(eccentricities_L);
     free(eccentricities_U);
+    free_complist(&components);
+    igraph_vector_ptr_destroy(&components);
 
     printf("\e[?25h\n");
 

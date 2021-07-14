@@ -7,6 +7,7 @@
 #include <time.h>
 #include "linked_list.h"
 
+// We could use LONG_MAX from limits.h instead
 #define MY_INF 9223372036854775807
 
 //TACTIQUES
@@ -31,7 +32,7 @@ commu_stats_t* get_a_community(graph_stats_t* graph_stats);
 
 long int get_vertice_eccentricity(igraph_t* graph, long int v, igraph_vector_t* distance);
 
-igraph_t* get_largest_connected_component(igraph_t* graph);
+igraph_t* get_largest_connected_component(igraph_t* graph, igraph_vector_ptr_t* components);
 
 void init_communities(graph_stats_t* graph_stats, igraph_vector_t* membership);
 

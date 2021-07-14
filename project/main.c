@@ -16,6 +16,7 @@ int main(int argc, char** argv)
         printf("HELP MENU:\n./get_eccentricities {graph_path} {tactic} {delta}\n%s\n%s\n", optional, tactics_message);
 
         char* tactics_list[] = {
+        "IGRAPH (but this one is not with our custom version, we use it for the testsuite)"
         "RANDOM",
         "HIGH_DEGREE",
         "LOW_DEGREE",
@@ -44,7 +45,7 @@ int main(int argc, char** argv)
     int delta = (argc == 4) ? atoi(argv[3]) : 0;
 
     if (argc < 3)
-        fprintf(stderr, "Since we did not mention a tactic, the random tactic is chosen\n");
+        fprintf(stderr, "Since we did not mention a tactic, the RANDOM tactic is chosen\n");
 
     if (argc < 4)
         fprintf(stderr, "Since we did not mention a delta, the default chosen delta is 0 (exact eccentricities)\n");
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
     //printf("Diameter: %ld\n", (long int) diameter);
     printf("Average degree: %g\n", 2.0 * num_edges / num_vertices);
 
-    char* res_filename =  "eccentricities_teexgraph.txt";
+    char* res_filename =  "eccentricities.txt";
     FILE* file_eccentricities = fopen(res_filename, "w");
 
     if (strcmp(default_tactic, "IGRAPH"))

@@ -21,13 +21,13 @@ def apply_tactic(tactic: str, graph_path: str) -> list:
         print("We encountered some errors")
         exit(bash_res)
 
-    with open("eccentricities_teexgraph.txt", 'r') as f:
+    with open("eccentricities.txt", 'r') as f:
         lines = f.readlines()
 
         res = lines[0].split(" ")
 
     # cleanup
-    os.remove("eccentricities_teexgraph.txt")
+    os.remove("eccentricities.txt")
 
     return res
 
@@ -59,6 +59,8 @@ def main():
 
     igraph_res = apply_tactic("IGRAPH", graph_path)
 
+    num_success = 0
+
     for tactic in tactics:
         res = apply_tactic(tactic, graph_path)
 
@@ -67,6 +69,10 @@ def main():
             print(res)
         else:
             print(f"{tactic}: {bcolors.OKGREEN}OK{bcolors.ENDC}\n")
+            num_success += 1
+
+    if num_success != len(tactics):
+        print(f"SUMMARY: We have some {bcolors.FAIL}KO{bcolors.ENDC}\n")
 
 
 
