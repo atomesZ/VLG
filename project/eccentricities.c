@@ -588,14 +588,24 @@ int are_all_commu_treated(commu_stats_t* list_commus, unsigned long int len_list
 
 igraph_t* get_largest_connected_component(igraph_t* graph, igraph_vector_ptr_t* components)
 {
-
     igraph_decompose(graph, components, IGRAPH_WEAK, -1, 2);
 
-    // a voir si il existe pas un max pour igraph_vector_ptr_t
-    igraph_vector_ptr_sort(components, igraph_vector_colex_cmp);
+    long int len_components = igraph_vector_ptr_size(components);
+
+    igraph_t* largest_component = (igraph_t*)igraph_vector_ptr_e(components, 0);
+    long int size_largest_component = igraph_vcount(largest_component);
+
+    for (long int i = 1; i < len_components; ++i)
+    {
+        igraph_t* current_sub_graph = (igraph_t*)igraph_vector_ptr_e(components, i);
+        long int size_current_sub_graph = igraph_vcount(current_sub_graph);
+
+        if (size_largest_component < size_current_sub_graph)
+            largest_component = current_sub_graph;
+    }
+
     //le premier element est le plus grand
-    igraph_t* largest_component = NULL;
-    largest_component = igraph_vector_ptr_e(components, 0);
+    //igraph_t* largest_component = igraph_vector_ptr_e(components, 0);
 
     return largest_component;
 }
