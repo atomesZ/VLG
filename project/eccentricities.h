@@ -58,7 +58,8 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
 void custom_eccentricities(igraph_t* graph,
                             unsigned long int num_vertices,
                             FILE* file_eccentricities,
-                            char* tactique_str);
+                            char* tactique_str,
+                            int delta);
 
 
 #endif /* end of include guard: ECCENTRICITIES_H */

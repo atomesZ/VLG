@@ -758,10 +758,10 @@ enum tactique string_to_tactique(char* tactique_str)
 void custom_eccentricities(igraph_t* graph,
                             unsigned long int num_vertices,
                             FILE* file_eccentricities,
-                            char* tactique_str)
+                            char* tactique_str,
+                            int delta)
 {
     unsigned long int num_bfs = 0;
-    int delta = 0;
 
     enum tactique tactique = string_to_tactique(tactique_str);
 

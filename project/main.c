@@ -8,17 +8,46 @@
 
 int main(int argc, char** argv)
 {
+    // We create a simple help menu to be user friendly
+    if ((argc < 2 || argc >= 5) || (argc == 2 && strcmp(argv[1], "--help") == 0))
+    {
+        char* optional = "If tactic and delta are not precised then the default values will be 'RANDOM' and '0'";
+        char* tactics_message = "The different tactics are:";
+        printf("HELP MENU:\n./get_eccentricities {graph_path} {tactic} {delta}\n%s\n%s\n", optional, tactics_message);
 
-    char* default_tactic = (argc == 3) ? argv[2] : "RANDOM";
-    if (argc < 2 || argc >= 4)
-    {
-        fprintf(stderr, "We need the name of the file containing the graph\n");
-        exit( EXIT_FAILURE );
+        char* tactics_list[] = {
+        "RANDOM",
+        "HIGH_DEGREE",
+        "LOW_DEGREE",
+        "BIG_DELTA",
+        "COMMUNITY_SIZE_ASC_RANDOM",
+        "COMMUNITY_SIZE_ASC_HIGH_DEGREE",
+        "COMMUNITY_SIZE_ASC_LOW_DEGREE",
+        "COMMUNITY_SIZE_ASC_BIG_DELTA",
+        "COMMUNITY_SIZE_DSC_RANDOM",
+        "COMMUNITY_SIZE_DSC_HIGH_DEGREE",
+        "COMMUNITY_SIZE_DSC_LOW_DEGREE",
+        "COMMUNITY_SIZE_DSC_BIG_DELTA",
+        "COMMUNITY_RANDOM_RANDOM",
+        "COMMUNITY_RANDOM_HIGH_DEGREE",
+        "COMMUNITY_RANDOM_LOW_DEGREE",
+        "COMMUNITY_RANDOM_BIG_DELTA",
+        NULL};
+
+        for (int i = 0; tactics_list[i] != NULL; ++i)
+            printf("  %s\n", tactics_list[i]);
+
+        return 0;
     }
+
+    char* default_tactic = (argc >= 3) ? argv[2] : "RANDOM";
+    int delta = (argc == 4) ? atoi(argv[3]) : 0;
+
     if (argc < 3)
-    {
-        fprintf(stderr, "We need the name of a tactic, if not given, the random tactic is chosen\n");
-    }
+        fprintf(stderr, "Since we did not mention a tactic, the random tactic is chosen\n");
+
+    if (argc < 4)
+        fprintf(stderr, "Since we did not mention a delta, the default chosen delta is 0 (exact eccentricities)\n");
 
     FILE* fptr = fopen(argv[1], "r");
 
@@ -65,7 +94,7 @@ int main(int argc, char** argv)
     FILE* file_eccentricities = fopen(res_filename, "w");
 
     if (strcmp(default_tactic, "IGRAPH"))
-        custom_eccentricities(&graph, num_vertices, file_eccentricities, default_tactic);
+        custom_eccentricities(&graph, num_vertices, file_eccentricities, default_tactic, delta);
     else // igraph_eccentricities
         igraph_eccentricities(&graph, num_vertices, file_eccentricities);
 
