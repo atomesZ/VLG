@@ -2,7 +2,7 @@ import os
 import sys
 
 def main():
-    delta = 15
+    delta = 20
     compare_results_with_IGRAPH = False
     tactics = [
         "RANDOM",
