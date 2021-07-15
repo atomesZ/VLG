@@ -41,6 +41,10 @@ int main(int argc, char** argv)
         "COMMUNITY_RANDOM_HIGH_DEGREE",
         "COMMUNITY_RANDOM_LOW_DEGREE",
         "COMMUNITY_RANDOM_BIG_DELTA",
+        "COMMUNITY_SWITCHER_RANDOM",
+        "COMMUNITY_SWITCHER_HIGH_DEGREE",
+        "COMMUNITY_SWITCHER_LOW_DEGREE",
+        "COMMUNITY_SWITCHER_BIG_DELTA",
         NULL};
 
         for (int i = 0; tactics_list[i] != NULL; ++i)
@@ -89,10 +93,6 @@ int main(int argc, char** argv)
     igraph_vector_ptr_init(&components, 0);
     igraph_t* graph = get_largest_connected_component(&whole_graph, &components);
 
-
-    // Get diameter and average degree
-    //igraph_real_t diameter;
-    //igraph_diameter(&graph, &diameter, 0, 0, 0, IGRAPH_UNDIRECTED, 1);
 
     unsigned long int num_edges = igraph_ecount(graph);
     unsigned long int num_vertices = igraph_vcount(graph);

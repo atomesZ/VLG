@@ -174,7 +174,7 @@ commu_stats_t* get_a_community(graph_stats_t* graph_stats)
     if (graph_stats->tactique < COMMUNITY)
         return graph_stats->list_commus;
     if (graph_stats->tactique > COMMUNITY_RANDOM)
-        return *(graph_stats->commus_not_treated); // graph_stats->list_commus + i
+        return *(graph_stats->commus_not_treated);
 
     //SWITCHER et SIZE
     sort_communities(graph_stats);
@@ -270,7 +270,7 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
         if (list_commus[j].id_community == -1)
         {
             //PAS CENSE ETRE LA
-            printf("%s\n", "aaaaa");
+            printf("%s\n", "Error in code, a community has not been set");
         }
         if (list_commus[j].list_vertice == NULL)
         {
@@ -297,7 +297,7 @@ void fill_communities(graph_stats_t* graph_stats, igraph_vector_t* membership, i
         else
         {
             //PAS CENSE ETRE LA
-            printf("%s\n", "aaaaa PAS CENSE ETRE LA");
+            printf("%s\n", "Error in code, this should not be reachable");
             exit( EXIT_FAILURE );
         }
 
@@ -443,9 +443,6 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
         //MODULARITY
         graph_stats->modularity = VECTOR(modularity)[igraph_vector_size(&modularity) - 1];
         printf("MODULARITY: %lf\n", graph_stats->modularity);
-        //igraph_real_t *modularityy = malloc(sizeof(igraph_real_t *));
-        //igraph_modularity(graph, &membership, NULL, 1, 0, modularityy);
-        //printf("\nMODULARITY : %lf\n", *modularityy);
 
 
         //COMMUNITIES INTO GRAPH STATS
@@ -458,7 +455,6 @@ commu_stats_t* constructor_list_commus(graph_stats_t* graph_stats)
         igraph_vector_destroy(&membership);
 
         printf("Number of communities: %ld\n", graph_stats->len_list_commus);
-
 
         //SORT
         sort_communities(graph_stats);
@@ -597,7 +593,6 @@ long int select_from(graph_stats_t* graph_stats)
         default:
             fprintf(stderr, "We tried to apply an unknown tactic\n");
             exit( EXIT_FAILURE );
-
     }
 
     return selected_vertice;
@@ -694,7 +689,7 @@ unsigned long int* get_eccentricities(igraph_t* graph, int delta, unsigned long 
                     //if (vertices_not_treated[i_vertices_not_treated]->borne_sup - vertices_not_treated[i_vertices_not_treated]->borne_inf <= delta)
                     if (eccentricities_U[w] - eccentricities_L[w] <= delta)
                     {
-                        eccentricities[w] = vertices_not_treated[i_vertices_not_treated]->borne_inf;
+                        //eccentricities[w] = vertices_not_treated[i_vertices_not_treated]->borne_inf;
                         eccentricities[w] = eccentricities_L[w];
 
                         // Pop the value;

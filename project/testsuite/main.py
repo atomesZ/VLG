@@ -1,6 +1,63 @@
 import os
 import sys
 
+def main():
+    delta = 15
+    compare_results_with_IGRAPH = False
+    tactics = [
+        "RANDOM",
+        "HIGH_DEGREE",
+        "LOW_DEGREE",
+        "BIG_DELTA",
+        "COMMUNITY_SIZE_ASC_RANDOM",
+        "COMMUNITY_SIZE_ASC_HIGH_DEGREE",
+        "COMMUNITY_SIZE_ASC_LOW_DEGREE",
+        "COMMUNITY_SIZE_ASC_BIG_DELTA",
+        "COMMUNITY_SIZE_DSC_RANDOM",
+        "COMMUNITY_SIZE_DSC_HIGH_DEGREE",
+        "COMMUNITY_SIZE_DSC_LOW_DEGREE",
+        "COMMUNITY_SIZE_DSC_BIG_DELTA",
+        "COMMUNITY_RANDOM_RANDOM",
+        "COMMUNITY_RANDOM_HIGH_DEGREE",
+        "COMMUNITY_RANDOM_LOW_DEGREE",
+        "COMMUNITY_RANDOM_BIG_DELTA",
+        "COMMUNITY_SWITCHER_RANDOM",
+        "COMMUNITY_SWITCHER_HIGH_DEGREE",
+        "COMMUNITY_SWITCHER_LOW_DEGREE",
+        "COMMUNITY_SWITCHER_BIG_DELTA"
+        ]
+
+    if len(sys.argv) != 2:
+        print("We need the path of the graph we would like to test with")
+
+    graph_path = sys.argv[1]
+
+    if compare_results_with_IGRAPH:
+        print("We try IGRAPH method")
+        igraph_res = apply_tactic("IGRAPH", delta, graph_path)
+    else:
+        print(f"{bcolors.OKCYAN}You decided to not compare results with ground truth{bcolors.ENDC}")
+        igraph_res = []
+
+    print("We now try all our tactics:")
+
+    num_success = 0
+    for tactic in tactics:
+        res = apply_tactic(tactic, delta, graph_path)
+
+        if compare_results_with_IGRAPH:
+            percentage_likelyhood = get_percentage_likelyhood(igraph_res, res)
+
+        if compare_results_with_IGRAPH and percentage_likelyhood != 100:
+            print(f"{tactic}: {bcolors.FAIL}KO{bcolors.ENDC}")
+            print("We got: {:.2f}% of good eccentricities\n".format(percentage_likelyhood))
+        else:
+            print(f"{tactic}: {bcolors.OKGREEN}OK{bcolors.ENDC}\n")
+            num_success += 1
+
+    if num_success != len(tactics):
+        print(f"SUMMARY: We have some {bcolors.FAIL}KO{bcolors.ENDC}\n")
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -31,7 +88,7 @@ def apply_tactic(tactic: str, delta: int, graph_path: str) -> list:
         res = lines[0].split(" ")
 
     # cleanup
-    os.remove(filename)
+    #os.remove(filename)
 
     return res
 
@@ -49,56 +106,7 @@ def get_percentage_likelyhood(igraph_res, res):
     return (num_same / len(igraph_res)) * 100
 
 
-def main():
-    delta = 10
-    tactics = [
-        "RANDOM",
-        "HIGH_DEGREE",
-        "LOW_DEGREE",
-        "BIG_DELTA",
-        "COMMUNITY_SIZE_ASC_RANDOM",
-        "COMMUNITY_SIZE_ASC_HIGH_DEGREE",
-        "COMMUNITY_SIZE_ASC_LOW_DEGREE",
-        "COMMUNITY_SIZE_ASC_BIG_DELTA",
-        "COMMUNITY_SIZE_DSC_RANDOM",
-        "COMMUNITY_SIZE_DSC_HIGH_DEGREE",
-        "COMMUNITY_SIZE_DSC_LOW_DEGREE",
-        "COMMUNITY_SIZE_DSC_BIG_DELTA",
-        "COMMUNITY_RANDOM_RANDOM",
-        "COMMUNITY_RANDOM_HIGH_DEGREE",
-        "COMMUNITY_RANDOM_LOW_DEGREE",
-        "COMMUNITY_RANDOM_BIG_DELTA",
-        "COMMUNITY_SWITCHER_RANDOM",
-        "COMMUNITY_SWITCHER_HIGH_DEGREE",
-        "COMMUNITY_SWITCHER_LOW_DEGREE",
-        "COMMUNITY_SWITCHER_BIG_DELTA"
-        ]
 
-    if len(sys.argv) != 2:
-        print("We need the path of the graph we would like to test with")
-
-    graph_path = sys.argv[1]
-
-    print("We try IGRAPH method")
-    igraph_res = []#apply_tactic("IGRAPH", delta, graph_path)
-
-    print("We now try all our tactics:")
-
-    num_success = 0
-    for tactic in tactics:
-        res = apply_tactic(tactic, delta, graph_path)
-
-        percentage_likelyhood = get_percentage_likelyhood(igraph_res, res)
-
-        if percentage_likelyhood != 100:
-            print(f"{tactic}: {bcolors.FAIL}KO{bcolors.ENDC}")
-            print("We got: {:.2f}% of good eccentricities\n".format(percentage_likelyhood))
-        else:
-            print(f"{tactic}: {bcolors.OKGREEN}OK{bcolors.ENDC}\n")
-            num_success += 1
-
-    if num_success != len(tactics):
-        print(f"SUMMARY: We have some {bcolors.FAIL}KO{bcolors.ENDC}\n")
 
 
 if __name__ == "__main__":
