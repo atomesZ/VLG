@@ -98,6 +98,23 @@ void tactique_communities_size(graph_stats_t* graph_stats)
     graph_stats->commus_not_treated = commus_not_treated;
 }
 
+void tactique_communities_switcher(graph_stats_t* graph_stats)
+{
+    static int switcher = 0;
+    switcher = !switcher;
+
+    const unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
+    commu_stats_t** commus_not_treated = graph_stats->commus_not_treated;
+
+    if (switcher)
+        qsort(commus_not_treated, len_commus_not_treated, sizeof(commu_stats_t*), communities_size_sort_asc_comp);
+    else
+        qsort(commus_not_treated, len_commus_not_treated, sizeof(commu_stats_t*), communities_size_sort_dsc_comp);
+
+    graph_stats->commus_not_treated = commus_not_treated;
+}
+
+
 void tactique_communities_random(graph_stats_t* graph_stats)
 {
     const unsigned long int len_commus_not_treated = graph_stats->len_commus_not_treated;
@@ -139,6 +156,14 @@ void sort_communities(graph_stats_t* graph_stats)
             tactique_communities_random(graph_stats);
             break;
         }
+        case COMMUNITY_SWITCHER_RANDOM:
+        case COMMUNITY_SWITCHER_HIGH_DEGREE:
+        case COMMUNITY_SWITCHER_LOW_DEGREE:
+        case COMMUNITY_SWITCHER_BIG_DELTA:
+        {
+            tactique_communities_switcher(graph_stats);
+            break;
+        }
         default:
             fprintf(stderr, "No community tactic applied\n");
     }
@@ -148,10 +173,10 @@ commu_stats_t* get_a_community(graph_stats_t* graph_stats)
 {
     if (graph_stats->tactique < COMMUNITY)
         return graph_stats->list_commus;
-
     if (graph_stats->tactique > COMMUNITY_RANDOM)
         return *(graph_stats->commus_not_treated); // graph_stats->list_commus + i
 
+    //SWITCHER et SIZE
     sort_communities(graph_stats);
     return *(graph_stats->commus_not_treated); // We return the address of the first element
 }
@@ -536,6 +561,7 @@ long int select_from(graph_stats_t* graph_stats)
         case COMMUNITY_SIZE_ASC_RANDOM:
         case COMMUNITY_SIZE_DSC_RANDOM:
         case COMMUNITY_RANDOM_RANDOM:
+        case COMMUNITY_SWITCHER_RANDOM:
         {
             commu_stats_t* community = get_a_community(graph_stats);
             selected_vertice = tactique_1_random(community);
@@ -544,6 +570,7 @@ long int select_from(graph_stats_t* graph_stats)
         case COMMUNITY_SIZE_ASC_HIGH_DEGREE:
         case COMMUNITY_SIZE_DSC_HIGH_DEGREE:
         case COMMUNITY_RANDOM_HIGH_DEGREE:
+        case COMMUNITY_SWITCHER_HIGH_DEGREE:
         {
             commu_stats_t* community = get_a_community(graph_stats);
             selected_vertice = tactique_2_high_degree(community);
@@ -552,6 +579,7 @@ long int select_from(graph_stats_t* graph_stats)
         case COMMUNITY_SIZE_ASC_LOW_DEGREE:
         case COMMUNITY_SIZE_DSC_LOW_DEGREE:
         case COMMUNITY_RANDOM_LOW_DEGREE:
+        case COMMUNITY_SWITCHER_LOW_DEGREE:
         {
             commu_stats_t* community = get_a_community(graph_stats);
             selected_vertice = tactique_3_low_degree(community);
@@ -560,6 +588,7 @@ long int select_from(graph_stats_t* graph_stats)
         case COMMUNITY_SIZE_ASC_BIG_DELTA:
         case COMMUNITY_SIZE_DSC_BIG_DELTA:
         case COMMUNITY_RANDOM_BIG_DELTA:
+        case COMMUNITY_SWITCHER_BIG_DELTA:
         {
             commu_stats_t* community = get_a_community(graph_stats);
             selected_vertice = tactique_4_big_delta(community);
@@ -603,9 +632,6 @@ igraph_t* get_largest_connected_component(igraph_t* graph, igraph_vector_ptr_t* 
         if (size_largest_component < size_current_sub_graph)
             largest_component = current_sub_graph;
     }
-
-    //le premier element est le plus grand
-    //igraph_t* largest_component = igraph_vector_ptr_e(components, 0);
 
     return largest_component;
 }
@@ -748,6 +774,16 @@ enum tactique string_to_tactique(char* tactique_str)
         return COMMUNITY_RANDOM_LOW_DEGREE;
     if (strcmp(tactique_str, "COMMUNITY_RANDOM_BIG_DELTA") == 0)
         return COMMUNITY_RANDOM_BIG_DELTA;
+
+    if (strcmp(tactique_str, "COMMUNITY_SWITCHER_RANDOM") == 0)
+        return COMMUNITY_SWITCHER_RANDOM;
+    if (strcmp(tactique_str, "COMMUNITY_SWITCHER_HIGH_DEGREE") == 0)
+        return COMMUNITY_SWITCHER_HIGH_DEGREE;
+    if (strcmp(tactique_str, "COMMUNITY_SWITCHER_LOW_DEGREE") == 0)
+        return COMMUNITY_SWITCHER_LOW_DEGREE;
+    if (strcmp(tactique_str, "COMMUNITY_SWITCHER_BIG_DELTA") == 0)
+        return COMMUNITY_SWITCHER_BIG_DELTA;
+
     return RANDOM;
 }
 

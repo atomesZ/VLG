@@ -50,7 +50,7 @@ def get_percentage_likelyhood(igraph_res, res):
 
 
 def main():
-    delta = 0
+    delta = 10
     tactics = [
         "RANDOM",
         "HIGH_DEGREE",
@@ -67,7 +67,12 @@ def main():
         "COMMUNITY_RANDOM_RANDOM",
         "COMMUNITY_RANDOM_HIGH_DEGREE",
         "COMMUNITY_RANDOM_LOW_DEGREE",
-        "COMMUNITY_RANDOM_BIG_DELTA"]
+        "COMMUNITY_RANDOM_BIG_DELTA",
+        "COMMUNITY_SWITCHER_RANDOM",
+        "COMMUNITY_SWITCHER_HIGH_DEGREE",
+        "COMMUNITY_SWITCHER_LOW_DEGREE",
+        "COMMUNITY_SWITCHER_BIG_DELTA"
+        ]
 
     if len(sys.argv) != 2:
         print("We need the path of the graph we would like to test with")

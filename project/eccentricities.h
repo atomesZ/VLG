@@ -24,6 +24,7 @@ int communities_size_sort_asc_comp(const void* A, const void* B);
 int communities_size_sort_dsc_comp(const void* A, const void* B);
 void tactique_communities_size(graph_stats_t* graph_stats);
 
+void tactique_communities_switcher(graph_stats_t* graph_stats);
 void tactique_communities_random(graph_stats_t* graph_stats);
 
 void sort_communities(graph_stats_t* graph_stats);
